@@ -1,0 +1,11 @@
+# Credentials — never commit
+.env
+*.pem
+*.key
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/

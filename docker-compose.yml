@@ -1,0 +1,67 @@
+---
+# =============================================================================
+# Cline CLI + Azure DevOps MCP - Docker Compose
+# =============================================================================
+# Usage:
+#   1. Copy .env.example to .env and fill in your credentials
+#   2. docker compose run --rm cline                   # interactive session
+#   3. docker compose run --rm cline -y "fix tests"    # headless task
+# =============================================================================
+
+services:
+  cline:
+    image: ${DOCKER_IMAGE:-your-org/cline-ado}:${IMAGE_TAG:-latest}
+    # To build locally instead of pulling:
+    # build:
+    #   context: .
+    #   args:
+    #     CLINE_VERSION: "2.5.0"
+    #     ADO_MCP_VERSION: "2.4.0"
+
+    environment:
+      # ── AI Provider ─────────────────────────────────────────────────────────
+      # Uncomment the ONE provider you use. Leave the rest commented out.
+
+      # Option A: Anthropic (Claude)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+
+      # Option B: OpenAI (standard)
+      # - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+
+      # Option C: OpenAI-compatible (Azure OpenAI / Ollama / LM Studio / vLLM)
+      # - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      # - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
+      # - CLINE_MODEL=${CLINE_MODEL:-}
+
+      # Option D: OpenRouter
+      # - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+
+      # Option E: Fully custom provider
+      # - CLINE_PROVIDER=${CLINE_PROVIDER:-}
+      # - CLINE_API_KEY=${CLINE_API_KEY:-}
+      # - CLINE_MODEL=${CLINE_MODEL:-}
+      # - CLINE_BASE_URL=${CLINE_BASE_URL:-}
+
+      # ── Azure DevOps MCP ─────────────────────────────────────────────────────
+      - ADO_ORG=${ADO_ORG:-}
+      - ADO_MCP_AUTH_TOKEN=${ADO_MCP_AUTH_TOKEN:-}
+      # - ADO_TENANT_ID=${ADO_TENANT_ID:-}
+      # - ADO_MCP_DOMAINS=${ADO_MCP_DOMAINS:-repositories,work-items,pipelines}
+      # - ADO_MCP_DISABLED=false
+
+    volumes:
+      # Mount your project as the working directory
+      - .:/workspace
+
+      # Persist Cline config & MCP auth tokens across sessions
+      - cline-data:/home/node/.cline/data
+
+    working_dir: /workspace
+
+    # Required for Cline's interactive TUI
+    stdin_open: true
+    tty: true
+
+volumes:
+  cline-data:
+    driver: local
