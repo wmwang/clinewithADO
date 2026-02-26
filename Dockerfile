@@ -32,14 +32,22 @@ RUN apt-get update && apt-get install -y \
 
 # Install cline CLI and Azure DevOps MCP globally.
 # Both are pre-installed so MCP launches instantly without npx download.
+# global-agent is a safety net for any HTTP calls outside typed-rest-client.
 RUN npm install -g \
     "cline@${CLINE_VERSION}" \
     "@azure-devops/mcp@${ADO_MCP_VERSION}" \
+    global-agent \
     && npm cache clean --force
 
+# Patch @azure-devops/mcp: replace `undefined` IRequestOptions with a runtime
+# proxy reader so typed-rest-client forwards requests through HTTPS_PROXY.
+# See: https://github.com/microsoft/azure-devops-mcp/blob/main/src/index.ts
+COPY patch-ado-mcp.js /tmp/patch-ado-mcp.js
+RUN NODE_PATH=$(npm root -g) node /tmp/patch-ado-mcp.js && rm /tmp/patch-ado-mcp.js
+
 # node:slim already ships with a "node" user at UID/GID 1000 — reuse it.
-# Default config directory (overridable via CLINE_DIR env var)
-ENV CLINE_DIR=/home/node/.cline/data \
+# CLINE_DIR is the root that Cline appends "data/settings/" to internally.
+ENV CLINE_DIR=/home/node/.cline \
     TERM=xterm-256color
 
 # Pre-create Cline config directories owned by the node user

@@ -16,16 +16,24 @@
 #   ADO_ORG               - [required] Organization name (e.g. "contoso")
 #   ADO_MCP_AUTH_TOKEN    - [required for headless] Personal Access Token
 #   ADO_TENANT_ID         - Azure tenant ID (optional, for multi-tenant setups)
-#   ADO_MCP_DOMAINS       - Comma-separated domains to enable (default: all)
+#   ADO_DOMAINS           - Comma-separated domains to enable (default: all)
 #                           Values: core, work, work-items, search, test-plans,
 #                                   repositories, wiki, pipelines, advanced-security
 #   ADO_MCP_DISABLED      - Set to "true" to skip Azure DevOps MCP entirely
+#
+# Corporate Proxy (optional):
+#   HTTPS_PROXY           - Proxy for HTTPS traffic (e.g. http://proxy.corp.com:8080)
+#   HTTP_PROXY            - Proxy for HTTP traffic
+#   NO_PROXY              - Comma-separated hostnames/CIDRs to bypass proxy
+#   ADO_MCP_TLS_SKIP_VERIFY - Set to "true" to disable TLS certificate verification
+#                             (needed when proxy does SSL inspection)
 # =============================================================================
 
 set -euo pipefail
 
-CONFIG_DIR="${CLINE_DIR:-/home/node/.cline/data}"
-SETTINGS_DIR="${CONFIG_DIR}/settings"
+# CLINE_DIR is the root Cline uses; it internally appends "data/settings/" to it.
+CONFIG_DIR="${CLINE_DIR:-/home/node/.cline}"
+SETTINGS_DIR="${CONFIG_DIR}/data/settings"
 MCP_CONFIG="${SETTINGS_DIR}/cline_mcp_settings.json"
 
 mkdir -p "${SETTINGS_DIR}"
@@ -78,18 +86,52 @@ const args = [org || 'YOUR_ORG', '--authentication', authMethod];
 if (tenant)     args.push('--tenant', tenant);
 if (domainsRaw) args.push('--domains', ...domainsRaw.split(',').map(d => d.trim()).filter(Boolean));
 
-// Env vars passed to the MCP server child process
-const env = pat ? { ADO_MCP_AUTH_TOKEN: pat } : {};
+// ── Build env for MCP subprocess ──────────────────────────────────────────
+const env = {};
+if (pat) env.ADO_MCP_AUTH_TOKEN = pat;
+
+// Proxy: forward to subprocess so typed-rest-client (patched) and
+// global-agent both pick it up.
+const httpsProxy = process.env.HTTPS_PROXY || process.env.https_proxy || '';
+const httpProxy  = process.env.HTTP_PROXY  || process.env.http_proxy  || '';
+const noProxy    = process.env.NO_PROXY    || process.env.no_proxy    || '';
+const effectiveProxy = httpsProxy || httpProxy;
+
+if (effectiveProxy) {
+  // global-agent patches http/https at Node.js agent level (safety net for
+  // any HTTP calls that bypass typed-rest-client).
+  // Uses absolute path because NODE_PATH may not be set inside subprocess.
+  env.NODE_OPTIONS             = '--require /usr/local/lib/node_modules/global-agent/bootstrap';
+  env.GLOBAL_AGENT_HTTPS_PROXY = httpsProxy || httpProxy;
+  env.GLOBAL_AGENT_HTTP_PROXY  = httpProxy  || httpsProxy;
+  env.HTTPS_PROXY = httpsProxy || httpProxy;
+  env.HTTP_PROXY  = httpProxy  || httpsProxy;
+}
+if (noProxy) {
+  env.GLOBAL_AGENT_NO_PROXY = noProxy;
+  env.NO_PROXY = noProxy;
+}
+
+// TLS: disable certificate verification when proxy does SSL inspection.
+// Sets both NODE_TLS_REJECT_UNAUTHORIZED (native Node http/https) and
+// the flag read by patch-ado-mcp.js (typed-rest-client ignoreSslError).
+if (process.env.ADO_MCP_TLS_SKIP_VERIFY === 'true') {
+  env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  env.ADO_MCP_TLS_SKIP_VERIFY      = 'true';
+}
 
 const config = {
   mcpServers: org ? {
-    'azure-devops': { command: 'mcp-server-azuredevops', args, env, disabled }
+    'azure-devops': { command: '/usr/local/bin/mcp-server-azuredevops', args, env, disabled }
   } : {}
 };
 
 fs.writeFileSync(process.env.MCP_CONFIG_PATH, JSON.stringify(config, null, 2) + '\n', 'utf8');
 "
 fi
+
+echo "[DEBUG] MCP config (${MCP_CONFIG}):"
+cat "${MCP_CONFIG}"
 
 # Status output
 if [ -z "${ADO_ORG:-}" ]; then
@@ -102,6 +144,10 @@ else
         echo "[WARN] ADO_MCP_AUTH_TOKEN not set — browser auth will be attempted (fails in headless Docker)."
         echo "[WARN] For Docker/CI: set ADO_MCP_AUTH_TOKEN to a Personal Access Token."
     fi
+fi
+
+if [ "${ADO_MCP_TLS_SKIP_VERIFY:-}" = "true" ]; then
+    echo "[WARN] ADO_MCP_TLS_SKIP_VERIFY=true — TLS certificate verification disabled."
 fi
 
 # ============================================================================

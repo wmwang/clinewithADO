@@ -42,6 +42,12 @@ services:
       # - CLINE_MODEL=${CLINE_MODEL:-}
       # - CLINE_BASE_URL=${CLINE_BASE_URL:-}
 
+      # ── Corporate Proxy (optional) ───────────────────────────────────────────
+      # - HTTPS_PROXY=${HTTPS_PROXY:-}
+      # - HTTP_PROXY=${HTTP_PROXY:-}
+      # - NO_PROXY=${NO_PROXY:-}
+      # - ADO_MCP_TLS_SKIP_VERIFY=true   # uncomment if proxy does SSL inspection
+
       # ── Azure DevOps MCP ─────────────────────────────────────────────────────
       - ADO_ORG=${ADO_ORG:-}
       - ADO_MCP_AUTH_TOKEN=${ADO_MCP_AUTH_TOKEN:-}

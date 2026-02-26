@@ -155,6 +155,35 @@ docker run --rm \
 ADO_MCP_DOMAINS=repositories,work-items,pipelines
 ```
 
+### 企業網路 / Corporate Proxy
+
+若你的網路需要透過 proxy 才能連線到 Azure DevOps 或 AI Provider：
+
+| 變數 | 說明 |
+|------|------|
+| `HTTPS_PROXY` | Proxy URL，例如 `http://proxy.corp.com:8080` |
+| `HTTP_PROXY` | HTTP proxy URL（通常與 `HTTPS_PROXY` 相同） |
+| `NO_PROXY` | 不走 proxy 的 hostname，逗號分隔，例如 `localhost,127.0.0.1,.corp.internal` |
+| `ADO_MCP_TLS_SKIP_VERIFY` | 設 `true` 可停用 TLS 憑證驗證（proxy 做 SSL inspection / MITM 時需要） |
+
+> **實作說明**：`HTTPS_PROXY` 會同時作用於兩層：
+> - **typed-rest-client**（WebApi 底層 HTTP）— 透過 build-time patch 注入 `IRequestOptions.proxy`
+> - **Node.js http/https agent**（其他 HTTP 呼叫）— 透過 `global-agent` 在執行期 preload
+
+範例：
+```bash
+docker run --rm \
+  -e ANTHROPIC_API_KEY=sk-ant-xxx \
+  -e ADO_ORG=contoso \
+  -e ADO_MCP_AUTH_TOKEN=your-pat \
+  -e HTTPS_PROXY=http://proxy.corp.com:8080 \
+  -e NO_PROXY=localhost,127.0.0.1 \
+  -e ADO_MCP_TLS_SKIP_VERIFY=true \
+  -v "$(pwd):/workspace" \
+  your-org/cline-ado:latest \
+  -y "list my work items"
+```
+
 ---
 
 ## 認證說明
