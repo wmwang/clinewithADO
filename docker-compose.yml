@@ -25,6 +25,13 @@ services:
       # Optional: model override (default: gpt-4o)
       # - CLINE_MODEL=${CLINE_MODEL:-}
 
+      # ── Azure DevOps (optional) ──────────────────────────────────────────────
+      # Set ADO_PAT to enable az devops CLI and azure-devops Python SDK auth.
+      # ADO_ORG is required when ADO_PAT is set; ADO_PROJECT is optional.
+      # - ADO_ORG=${ADO_ORG:-}           # org name, e.g. contoso
+      # - ADO_PAT=${ADO_PAT:-}           # Personal Access Token
+      # - ADO_PROJECT=${ADO_PROJECT:-}   # default project name
+
       # ── Corporate Proxy (optional) ───────────────────────────────────────────
       # - HTTPS_PROXY=${HTTPS_PROXY:-}
       # - HTTP_PROXY=${HTTP_PROXY:-}
