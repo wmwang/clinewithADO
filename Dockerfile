@@ -20,12 +20,28 @@ LABEL org.opencontainers.image.title="cline" \
       org.opencontainers.image.source="https://github.com/cline/cline" \
       cline.version="${CLINE_VERSION}"
 
-# Install system dependencies
+# Install system dependencies + Azure CLI (Microsoft official Debian repo)
+# node:22-slim is Debian Bookworm — hardcode the dist name to avoid lsb-release dep.
 RUN apt-get update && apt-get install -y \
     git \
     ca-certificates \
     curl \
+    gnupg \
+    && curl -sLS https://packages.microsoft.com/keys/microsoft.asc \
+       | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture)] https://packages.microsoft.com/repos/azure-cli/ bookworm main" \
+       > /etc/apt/sources.list.d/azure-cli.list \
+    && apt-get update && apt-get install -y azure-cli \
     && rm -rf /var/lib/apt/lists/*
+
+# Use a global extension directory so all users (root at build-time, node at
+# runtime) share the same install. Without this, az installs to /root/.azure
+# and the non-root node user can't find it, triggering a runtime download.
+ENV AZURE_EXTENSION_DIR=/opt/azure-extensions
+
+# Install the Azure DevOps extension for az CLI.
+# Pre-installed here so it's available immediately without runtime downloads.
+RUN az extension add --name azure-devops --yes
 
 # Install cline CLI globally
 RUN npm install -g \
