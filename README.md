@@ -6,6 +6,7 @@
 |---------|---------|
 | `cline` | 2.5.0 |
 | `@azure-devops/mcp` | 2.4.0 |
+| `azure-cli` + `azure-devops` extension | 最新穩定版 |
 | Node.js | 22 (slim) |
 
 ---
@@ -197,6 +198,29 @@ docker run --rm \
 | `interactive` | 自動開啟瀏覽器 | ❌ 無法在 headless Docker 使用 |
 
 > **注意**：`AZURE_DEVOPS_PAT` 是社群套件 `@tiberriver256/mcp-server-azure-devops` 的變數，**官方套件不支援**，請使用 `ADO_MCP_AUTH_TOKEN`。
+
+---
+
+## Azure CLI (`az devops`)
+
+Image 內已預裝 `azure-cli` 及 `azure-devops` extension。
+只要設定 `ADO_MCP_AUTH_TOKEN`，entrypoint 會自動完成以下動作，**不需要手動 `az login`**：
+
+```bash
+export AZURE_DEVOPS_EXT_PAT="${ADO_MCP_AUTH_TOKEN}"
+az devops configure --defaults organization="https://dev.azure.com/${ADO_ORG}"
+```
+
+容器啟動後可直接使用所有 `az devops` 指令：
+
+```bash
+az devops project list
+az repos list
+az pipelines list
+az boards work-item show --id 1234
+```
+
+> **注意**：`AZURE_DEVOPS_EXT_PAT` 是 `az devops` extension 用的 PAT 機制，與 `@azure-devops/mcp` 的 `azcli` 認證模式（需要 `az login` 憑證快取）不同。兩者獨立運作。
 
 ---
 

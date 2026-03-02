@@ -12,9 +12,11 @@
 #   CLINE_API_KEY         - API key when using CLINE_PROVIDER
 #   CLINE_MODEL           - Model override for any provider
 #
-# Azure DevOps MCP:
+# Azure DevOps MCP + Azure CLI:
 #   ADO_ORG               - [required] Organization name (e.g. "contoso")
 #   ADO_MCP_AUTH_TOKEN    - [required for headless] Personal Access Token
+#                           Also auto-configures `az devops` via AZURE_DEVOPS_EXT_PAT.
+#                           No separate az login needed.
 #   ADO_TENANT_ID         - Azure tenant ID (optional, for multi-tenant setups)
 #   ADO_DOMAINS           - Comma-separated domains to enable (default: all)
 #                           Values: core, work, work-items, search, test-plans,
@@ -199,8 +201,29 @@ else
 fi
 
 # ============================================================================
-# Step 3: Launch Cline (pass through all arguments)
+# Step 2.5: Configure Azure CLI with PAT (reuses ADO_MCP_AUTH_TOKEN)
+#
+# Sets AZURE_DEVOPS_EXT_PAT so that `az devops` commands authenticate without
+# an interactive login. Also sets the default organisation if ADO_ORG is given.
+# No extra env var needed — PAT is already in ADO_MCP_AUTH_TOKEN.
 # ============================================================================
 
+if [ -n "${ADO_MCP_AUTH_TOKEN:-}" ]; then
+    export AZURE_DEVOPS_EXT_PAT="${ADO_MCP_AUTH_TOKEN}"
+    if [ -n "${ADO_ORG:-}" ]; then
+        az devops configure --defaults organization="https://dev.azure.com/${ADO_ORG}" \
+            && echo "[INFO] Azure CLI: org=${ADO_ORG}, PAT auth ready (AZURE_DEVOPS_EXT_PAT set)" \
+            || echo "[WARN] Azure CLI: failed to set default org"
+    else
+        echo "[INFO] Azure CLI: PAT auth ready (no ADO_ORG set, use --org per command)"
+    fi
+else
+    echo "[INFO] Azure CLI: no PAT (ADO_MCP_AUTH_TOKEN not set) — run 'az login' manually if needed"
+fi
+
+# ============================================================================
+# Step 3: Launch Cline (pass through all arguments) and install openspec
+# ============================================================================
+openspec init --tools cline
 echo "[INFO] Starting Cline..."
 exec cline "$@"
