@@ -30,6 +30,7 @@ services:
 
       # ── Azure DevOps ─────────────────────────────────────────────────────────
       - ADO_ORG=${ADO_ORG}
+      - ADO_PROJECT=${ADO_PROJECT}
       - ADO_MCP_AUTH_TOKEN=${ADO_MCP_AUTH_TOKEN}
 
     volumes:
