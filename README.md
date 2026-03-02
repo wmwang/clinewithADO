@@ -1,12 +1,12 @@
 # cline-ado
 
-[Cline CLI](https://github.com/cline/cline) + [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp) — packaged as a single Docker image.
+[Cline CLI](https://github.com/cline/cline) + Azure DevOps CLI (`az devops`) + Python SDK — packaged as a single Docker image.
 
 | Package | Version |
 |---------|---------|
 | `cline` | 2.5.0 |
-| `@azure-devops/mcp` | 2.4.0 |
 | `azure-cli` + `azure-devops` extension | 最新穩定版 |
+| `azure-devops` (Python SDK) | 最新穩定版 |
 | Node.js | 22 (slim) |
 
 ---
@@ -66,9 +66,9 @@ cp .env.example .env
 docker compose run --rm cline
 # 或
 docker run -it --rm \
-  -e ANTHROPIC_API_KEY=sk-ant-xxx \
+  -e OPENAI_API_KEY=sk-xxx \
   -e ADO_ORG=contoso \
-  -e ADO_MCP_AUTH_TOKEN=your-pat \
+  -e ADO_PAT=your-pat \
   -v "$(pwd):/workspace" \
   your-org/cline-ado:latest
 ```
@@ -77,9 +77,9 @@ docker run -it --rm \
 
 ```bash
 docker run --rm \
-  -e ANTHROPIC_API_KEY=sk-ant-xxx \
+  -e OPENAI_API_KEY=sk-xxx \
   -e ADO_ORG=contoso \
-  -e ADO_MCP_AUTH_TOKEN=your-pat \
+  -e ADO_PAT=your-pat \
   -v "$(pwd):/workspace" \
   your-org/cline-ado:latest \
   -y "create a work item for the login bug"
@@ -89,30 +89,13 @@ docker run --rm \
 
 ## 環境變數
 
-### AI Provider（擇一設定）
+### AI Provider（OpenAI-compatible）
 
-偵測優先順序如下，符合第一個條件就套用：
-
-| 優先 | 需要設定的變數 | 適用情境 |
-|------|--------------|---------|
-| 1 | `CLINE_PROVIDER` + `CLINE_API_KEY` (+ `CLINE_MODEL`, `CLINE_BASE_URL`) | 完全自訂 |
-| 2 | `ANTHROPIC_API_KEY` | Claude (Anthropic) |
-| 3 | `OPENAI_API_KEY` + `OPENAI_BASE_URL` | OpenAI-compatible 自訂 endpoint |
-| 4 | `OPENAI_API_KEY` | 標準 OpenAI |
-| 5 | `OPENROUTER_API_KEY` | OpenRouter |
-
-**各變數說明：**
-
-| 變數 | 說明 |
-|------|------|
-| `ANTHROPIC_API_KEY` | Anthropic API key（預設模型：`claude-sonnet-4-5-20250929`） |
-| `OPENAI_API_KEY` | OpenAI API key（預設模型：`gpt-4o`） |
-| `OPENAI_BASE_URL` | 自訂 endpoint URL，設定後自動套用 OpenAI-compatible 模式 |
-| `OPENROUTER_API_KEY` | OpenRouter API key |
-| `CLINE_PROVIDER` | 自訂 provider 名稱（需搭配 `CLINE_API_KEY`） |
-| `CLINE_API_KEY` | 自訂 provider 的 API key |
-| `CLINE_MODEL` | 覆寫任何 provider 的預設模型 |
-| `CLINE_BASE_URL` | 搭配 `CLINE_PROVIDER` 使用的自訂 endpoint |
+| 變數 | 必填 | 說明 |
+|------|------|------|
+| `OPENAI_API_KEY` | ✅ | OpenAI 或 OpenAI-compatible provider 的 API key |
+| `OPENAI_BASE_URL` | — | 自訂 endpoint URL（Azure OpenAI、Ollama、vLLM 等） |
+| `CLINE_MODEL` | — | 覆寫預設模型（預設：`gpt-4o`） |
 
 #### OpenAI-compatible 範例
 
@@ -138,23 +121,13 @@ docker run --rm \
 -e CLINE_MODEL=mistral-7b
 ```
 
-### Azure DevOps MCP
+### Azure DevOps
 
 | 變數 | 必填 | 說明 |
 |------|------|------|
-| `ADO_ORG` | ✅ | 組織名稱（URL 中 `dev.azure.com/` 後面的部分） |
-| `ADO_MCP_AUTH_TOKEN` | ✅ (headless) | Personal Access Token，搭配 `--authentication envvar` |
-| `ADO_TENANT_ID` | — | Azure Tenant ID（多租戶 / 訪客帳號時需要） |
-| `ADO_MCP_DOMAINS` | — | 逗號分隔的 domain 篩選（見下方） |
-| `ADO_MCP_DISABLED` | — | 設 `true` 可停用 ADO MCP |
-
-**ADO_MCP_DOMAINS 可用值**（不設定則載入全部）：
-`core`, `work`, `work-items`, `search`, `test-plans`, `repositories`, `wiki`, `pipelines`, `advanced-security`
-
-範例（只載入常用的三個）：
-```
-ADO_MCP_DOMAINS=repositories,work-items,pipelines
-```
+| `ADO_PAT` | — | Personal Access Token（設定後啟用 az devops 自動設定） |
+| `ADO_ORG` | ✅ (當 `ADO_PAT` 有設時) | 組織名稱（URL 中 `dev.azure.com/` 後面的部分） |
+| `ADO_PROJECT` | — | 預設專案名稱 |
 
 ### 企業網路 / Corporate Proxy
 
@@ -165,21 +138,15 @@ ADO_MCP_DOMAINS=repositories,work-items,pipelines
 | `HTTPS_PROXY` | Proxy URL，例如 `http://proxy.corp.com:8080` |
 | `HTTP_PROXY` | HTTP proxy URL（通常與 `HTTPS_PROXY` 相同） |
 | `NO_PROXY` | 不走 proxy 的 hostname，逗號分隔，例如 `localhost,127.0.0.1,.corp.internal` |
-| `ADO_MCP_TLS_SKIP_VERIFY` | 設 `true` 可停用 TLS 憑證驗證（proxy 做 SSL inspection / MITM 時需要） |
-
-> **實作說明**：`HTTPS_PROXY` 會同時作用於兩層：
-> - **typed-rest-client**（WebApi 底層 HTTP）— 透過 build-time patch 注入 `IRequestOptions.proxy`
-> - **Node.js http/https agent**（其他 HTTP 呼叫）— 透過 `global-agent` 在執行期 preload
 
 範例：
 ```bash
 docker run --rm \
-  -e ANTHROPIC_API_KEY=sk-ant-xxx \
+  -e OPENAI_API_KEY=sk-xxx \
   -e ADO_ORG=contoso \
-  -e ADO_MCP_AUTH_TOKEN=your-pat \
+  -e ADO_PAT=your-pat \
   -e HTTPS_PROXY=http://proxy.corp.com:8080 \
   -e NO_PROXY=localhost,127.0.0.1 \
-  -e ADO_MCP_TLS_SKIP_VERIFY=true \
   -v "$(pwd):/workspace" \
   your-org/cline-ado:latest \
   -y "list my work items"
@@ -187,28 +154,20 @@ docker run --rm \
 
 ---
 
-## 認證說明
-
-官方 `@azure-devops/mcp` 支援三種認證模式：
-
-| 模式 | 設定方式 | Docker 相容 |
-|------|----------|-------------|
-| `envvar` | `ADO_MCP_AUTH_TOKEN=<PAT>` | ✅ 推薦 |
-| `azcli` | 需先執行 `az login`（掛載 `~/.azure`） | ⚠️ 需額外設定 |
-| `interactive` | 自動開啟瀏覽器 | ❌ 無法在 headless Docker 使用 |
-
-> **注意**：`AZURE_DEVOPS_PAT` 是社群套件 `@tiberriver256/mcp-server-azure-devops` 的變數，**官方套件不支援**，請使用 `ADO_MCP_AUTH_TOKEN`。
-
----
-
 ## Azure CLI (`az devops`)
 
 Image 內已預裝 `azure-cli` 及 `azure-devops` extension。
-只要設定 `ADO_MCP_AUTH_TOKEN`，entrypoint 會自動完成以下動作，**不需要手動 `az login`**：
+只要設定 `ADO_PAT`，entrypoint 會自動完成以下動作，**不需要手動 `az login`**：
 
 ```bash
-export AZURE_DEVOPS_EXT_PAT="${ADO_MCP_AUTH_TOKEN}"
+export AZURE_DEVOPS_EXT_PAT="${ADO_PAT}"
 az devops configure --defaults organization="https://dev.azure.com/${ADO_ORG}"
+```
+
+若同時設定 `ADO_PROJECT`，也會自動設為預設專案：
+
+```bash
+az devops configure --defaults organization="https://dev.azure.com/${ADO_ORG}" project="${ADO_PROJECT}"
 ```
 
 容器啟動後可直接使用所有 `az devops` 指令：
@@ -220,48 +179,11 @@ az pipelines list
 az boards work-item show --id 1234
 ```
 
-> **注意**：`AZURE_DEVOPS_EXT_PAT` 是 `az devops` extension 用的 PAT 機制，與 `@azure-devops/mcp` 的 `azcli` 認證模式（需要 `az login` 憑證快取）不同。兩者獨立運作。
-
----
-
-## 新增更多 MCP Server
-
-未來要加其他 MCP（GitHub、Jira、Slack 等），**不需要修改 Dockerfile**，只需準備一個 JSON 設定檔並掛載：
-
-```json
-// my-mcp-settings.json
-{
-  "mcpServers": {
-    "azure-devops": {
-      "command": "mcp-server-azuredevops",
-      "args": ["contoso", "--authentication", "envvar"],
-      "env": { "ADO_MCP_AUTH_TOKEN": "your-pat" }
-    },
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"],
-      "env": { "GITHUB_TOKEN": "your-token" }
-    }
-  }
-}
-```
-
-```bash
-docker run -it --rm \
-  -e ANTHROPIC_API_KEY=... \
-  -e MCP_SETTINGS_FILE=/mcp-settings.json \
-  -v ./my-mcp-settings.json:/mcp-settings.json \
-  -v "$(pwd):/workspace" \
-  your-org/cline-ado
-```
-
-掛載後，`MCP_SETTINGS_FILE` 指向的檔案優先順序最高，entrypoint 會直接使用它，忽略 `ADO_ORG` 等自動生成邏輯。
-
 ---
 
 ## 持久化設定
 
-Cline 的設定（包含 MCP auth token 快取）存放在 `/home/node/.cline/data`。
+Cline 的設定存放在 `/home/node/.cline/data`。
 建議掛載 named volume 以保留設定：
 
 ```yaml
@@ -283,6 +205,6 @@ volumes:
 
 ## 版本紀錄
 
-| Image Tag | cline | @azure-devops/mcp | Node.js |
-|-----------|-------|-------------------|---------|
-| `latest`, `2.5.0` | 2.5.0 | 2.4.0 | 22 |
+| Image Tag | cline | Node.js |
+|-----------|-------|---------|
+| `latest`, `2.5.0` | 2.5.0 | 22 |
