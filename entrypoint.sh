@@ -1,34 +1,13 @@
 #!/bin/bash
 # =============================================================================
-# Cline + Azure DevOps MCP - Container Entrypoint
+# Cline - Container Entrypoint
 # =============================================================================
-# Reads environment variables and generates Cline configuration before launch.
+# Reads environment variables and configures Cline before launch.
 #
-# AI Provider (pick one):
-#   ANTHROPIC_API_KEY     - Anthropic API key (uses claude-sonnet-4-5 by default)
-#   OPENAI_API_KEY        - OpenAI API key (uses gpt-4o by default)
-#   OPENROUTER_API_KEY    - OpenRouter API key
-#   CLINE_PROVIDER        - Explicit provider name (requires CLINE_API_KEY + CLINE_MODEL)
-#   CLINE_API_KEY         - API key when using CLINE_PROVIDER
-#   CLINE_MODEL           - Model override for any provider
-#
-# Azure DevOps MCP + Azure CLI:
-#   ADO_ORG               - [required] Organization name (e.g. "contoso")
-#   ADO_MCP_AUTH_TOKEN    - [required for headless] Personal Access Token
-#                           Also auto-configures `az devops` via AZURE_DEVOPS_EXT_PAT.
-#                           No separate az login needed.
-#   ADO_TENANT_ID         - Azure tenant ID (optional, for multi-tenant setups)
-#   ADO_DOMAINS           - Comma-separated domains to enable (default: all)
-#                           Values: core, work, work-items, search, test-plans,
-#                                   repositories, wiki, pipelines, advanced-security
-#   ADO_MCP_DISABLED      - Set to "true" to skip Azure DevOps MCP entirely
-#
-# Corporate Proxy (optional):
-#   HTTPS_PROXY           - Proxy for HTTPS traffic (e.g. http://proxy.corp.com:8080)
-#   HTTP_PROXY            - Proxy for HTTP traffic
-#   NO_PROXY              - Comma-separated hostnames/CIDRs to bypass proxy
-#   ADO_MCP_TLS_SKIP_VERIFY - Set to "true" to disable TLS certificate verification
-#                             (needed when proxy does SSL inspection)
+# AI Provider (OpenAI-compatible):
+#   OPENAI_API_KEY    - [required] API key
+#   OPENAI_BASE_URL   - [optional] Custom endpoint (Azure OpenAI, Ollama, vLLM, etc.)
+#   CLINE_MODEL       - [optional] Model override (default: gpt-4o)
 # =============================================================================
 
 set -euo pipefail
@@ -40,189 +19,29 @@ MCP_CONFIG="${SETTINGS_DIR}/cline_mcp_settings.json"
 
 mkdir -p "${SETTINGS_DIR}"
 
-# ============================================================================
-# Step 1: Generate cline_mcp_settings.json via Node.js (safe JSON handling)
-#
-# Priority:
-#   1. MCP_SETTINGS_FILE env var   — point to any pre-built JSON file
-#   2. Volume-mounted config file  — user manages their own MCP list
-#   3. Auto-generate from ADO_ORG  — default, ADO MCP only
-#
-# To add more MCP servers in the future, mount your own settings file:
-#   -v ./my-mcp-settings.json:/mcp-settings.json
-#   -e MCP_SETTINGS_FILE=/mcp-settings.json
-# ============================================================================
-
-export MCP_CONFIG_PATH="${MCP_CONFIG}"
-
-# Check if the user provided a custom MCP settings file
-CUSTOM_MCP_FILE="${MCP_SETTINGS_FILE:-}"
-
-if [ -n "${CUSTOM_MCP_FILE}" ] && [ -f "${CUSTOM_MCP_FILE}" ]; then
-    # Use the externally provided file directly
-    cp "${CUSTOM_MCP_FILE}" "${MCP_CONFIG}"
-    echo "[INFO] MCP settings loaded from: ${CUSTOM_MCP_FILE}"
-
-elif [ -f "${MCP_CONFIG}" ] && [ -z "${ADO_ORG:-}" ]; then
-    # Config already exists (e.g. from a persisted volume) and no ADO env vars
-    # are set to trigger a regeneration — leave it untouched.
-    echo "[INFO] Using existing MCP settings at: ${MCP_CONFIG}"
-
-else
-    # Auto-generate from environment variables (ADO MCP only)
-    node -e "
-const fs = require('fs');
-
-const org        = process.env.ADO_ORG            || '';
-const pat        = process.env.ADO_MCP_AUTH_TOKEN || '';
-const disabled   = process.env.ADO_MCP_DISABLED === 'true' || !org;
-const tenant     = process.env.ADO_TENANT_ID      || '';
-const domainsRaw = process.env.ADO_MCP_DOMAINS    || '';
-
-// Auth method: prefer explicit override, then infer from available credentials
-const authMethod = process.env.ADO_AUTH_METHOD
-  || (pat ? 'envvar' : 'interactive');
-
-// CLI args for the mcp-server-azuredevops binary
-const args = [org || 'YOUR_ORG', '--authentication', authMethod];
-if (tenant)     args.push('--tenant', tenant);
-if (domainsRaw) args.push('--domains', ...domainsRaw.split(',').map(d => d.trim()).filter(Boolean));
-
-// ── Build env for MCP subprocess ──────────────────────────────────────────
-const env = {};
-if (pat) env.ADO_MCP_AUTH_TOKEN = pat;
-
-// Proxy: forward to subprocess so typed-rest-client (patched) and
-// global-agent both pick it up.
-const httpsProxy = process.env.HTTPS_PROXY || process.env.https_proxy || '';
-const httpProxy  = process.env.HTTP_PROXY  || process.env.http_proxy  || '';
-const noProxy    = process.env.NO_PROXY    || process.env.no_proxy    || '';
-const effectiveProxy = httpsProxy || httpProxy;
-
-if (effectiveProxy) {
-  // global-agent patches http/https at Node.js agent level (safety net for
-  // any HTTP calls that bypass typed-rest-client).
-  // Uses absolute path because NODE_PATH may not be set inside subprocess.
-  env.NODE_OPTIONS             = '--require /usr/local/lib/node_modules/global-agent/bootstrap';
-  env.GLOBAL_AGENT_HTTPS_PROXY = httpsProxy || httpProxy;
-  env.GLOBAL_AGENT_HTTP_PROXY  = httpProxy  || httpsProxy;
-  env.HTTPS_PROXY = httpsProxy || httpProxy;
-  env.HTTP_PROXY  = httpProxy  || httpsProxy;
-}
-if (noProxy) {
-  env.GLOBAL_AGENT_NO_PROXY = noProxy;
-  env.NO_PROXY = noProxy;
-}
-
-// TLS: disable certificate verification when proxy does SSL inspection.
-// Sets both NODE_TLS_REJECT_UNAUTHORIZED (native Node http/https) and
-// the flag read by patch-ado-mcp.js (typed-rest-client ignoreSslError).
-if (process.env.ADO_MCP_TLS_SKIP_VERIFY === 'true') {
-  env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-  env.ADO_MCP_TLS_SKIP_VERIFY      = 'true';
-}
-
-const config = {
-  mcpServers: org ? {
-    'azure-devops': { command: '/usr/local/bin/mcp-server-azuredevops', args, env, disabled }
-  } : {}
-};
-
-fs.writeFileSync(process.env.MCP_CONFIG_PATH, JSON.stringify(config, null, 2) + '\n', 'utf8');
-"
-fi
-
-echo "[DEBUG] MCP config (${MCP_CONFIG}):"
-cat "${MCP_CONFIG}"
-
-# Status output
-if [ -z "${ADO_ORG:-}" ]; then
-    echo "[WARN] ADO_ORG not set — Azure DevOps MCP will be skipped."
-    echo "[WARN] To enable: -e ADO_ORG=<your-org> -e ADO_MCP_AUTH_TOKEN=<PAT>"
-else
-    _auth_method="${ADO_AUTH_METHOD:-$([ -n "${ADO_MCP_AUTH_TOKEN:-}" ] && echo 'envvar' || echo 'interactive')}"
-    echo "[INFO] Azure DevOps MCP: org=${ADO_ORG}  auth=${_auth_method}"
-    if [ -z "${ADO_MCP_AUTH_TOKEN:-}" ]; then
-        echo "[WARN] ADO_MCP_AUTH_TOKEN not set — browser auth will be attempted (fails in headless Docker)."
-        echo "[WARN] For Docker/CI: set ADO_MCP_AUTH_TOKEN to a Personal Access Token."
-    fi
-fi
-
-if [ "${ADO_MCP_TLS_SKIP_VERIFY:-}" = "true" ]; then
-    echo "[WARN] ADO_MCP_TLS_SKIP_VERIFY=true — TLS certificate verification disabled."
+# Write empty MCP settings (no MCP servers configured)
+if [ ! -f "${MCP_CONFIG}" ]; then
+    echo '{"mcpServers":{}}' > "${MCP_CONFIG}"
 fi
 
 # ============================================================================
-# Step 2: Configure AI provider via cline auth
-#
-# OpenAI-compatible (Azure OpenAI, Ollama, LM Studio, vLLM, etc.):
-#   OPENAI_API_KEY + OPENAI_BASE_URL + CLINE_MODEL
-#
-# Fully custom provider:
-#   CLINE_PROVIDER + CLINE_API_KEY + CLINE_MODEL (+ CLINE_BASE_URL optional)
+# Configure AI provider via cline auth (OpenAI-compatible only)
 # ============================================================================
 
-_configure_provider() {
-    local provider="$1" key="$2" model="$3" base_url="${4:-}"
-    local extra_args=()
-    [ -n "${base_url}" ] && extra_args+=(--base-url "${base_url}")
-    echo "[INFO] AI provider: ${provider} / ${model}${base_url:+  (base_url=${base_url})}"
-    cline auth -p "${provider}" -k "${key}" -m "${model}" "${extra_args[@]}"
-}
-
-if [ -n "${CLINE_PROVIDER:-}" ] && [ -n "${CLINE_API_KEY:-}" ]; then
-    # Fully explicit — caller controls everything
-    _configure_provider "${CLINE_PROVIDER}" "${CLINE_API_KEY}" "${CLINE_MODEL:-claude-sonnet-4-5-20250929}" "${CLINE_BASE_URL:-}"
-
-elif [ -n "${ANTHROPIC_API_KEY:-}" ]; then
-    _configure_provider "anthropic" "${ANTHROPIC_API_KEY}" "${CLINE_MODEL:-claude-sonnet-4-5-20250929}"
-
-elif [ -n "${OPENAI_API_KEY:-}" ] && [ -n "${OPENAI_BASE_URL:-}" ]; then
-    # OpenAI-compatible with custom endpoint:
-    # Azure OpenAI  → OPENAI_BASE_URL=https://<resource>.openai.azure.com/openai/deployments/<deploy>
-    # Ollama        → OPENAI_BASE_URL=http://host.docker.internal:11434/v1
-    # LM Studio     → OPENAI_BASE_URL=http://host.docker.internal:1234/v1
-    # vLLM / other  → OPENAI_BASE_URL=http://your-server/v1
-    _configure_provider "openai" "${OPENAI_API_KEY}" "${CLINE_MODEL:-gpt-4o}" "${OPENAI_BASE_URL}"
-
-elif [ -n "${OPENAI_API_KEY:-}" ]; then
-    _configure_provider "openai" "${OPENAI_API_KEY}" "${CLINE_MODEL:-gpt-4o}"
-
-elif [ -n "${OPENROUTER_API_KEY:-}" ]; then
-    _configure_provider "openrouter" "${OPENROUTER_API_KEY}" "${CLINE_MODEL:-anthropic/claude-sonnet-4-5}"
-
-else
-    echo "[WARN] No AI provider API key detected. Cline may not work without one."
-    echo "[WARN]   ANTHROPIC_API_KEY                          — Claude (Anthropic)"
-    echo "[WARN]   OPENAI_API_KEY                             — OpenAI (standard)"
-    echo "[WARN]   OPENAI_API_KEY + OPENAI_BASE_URL           — OpenAI-compatible (Azure OpenAI / Ollama / LM Studio / vLLM)"
-    echo "[WARN]   OPENROUTER_API_KEY                         — OpenRouter"
-    echo "[WARN]   CLINE_PROVIDER + CLINE_API_KEY + CLINE_MODEL (+ CLINE_BASE_URL) — fully custom"
+if [ -z "${OPENAI_API_KEY:-}" ]; then
+    echo "[ERROR] OPENAI_API_KEY is required."
+    exit 1
 fi
 
-# ============================================================================
-# Step 2.5: Configure Azure CLI with PAT (reuses ADO_MCP_AUTH_TOKEN)
-#
-# Sets AZURE_DEVOPS_EXT_PAT so that `az devops` commands authenticate without
-# an interactive login. Also sets the default organisation if ADO_ORG is given.
-# No extra env var needed — PAT is already in ADO_MCP_AUTH_TOKEN.
-# ============================================================================
+_model="${CLINE_MODEL:-gpt-4o}"
+_extra_args=()
+[ -n "${OPENAI_BASE_URL:-}" ] && _extra_args+=(--base-url "${OPENAI_BASE_URL}")
 
-if [ -n "${ADO_MCP_AUTH_TOKEN:-}" ]; then
-    export AZURE_DEVOPS_EXT_PAT="${ADO_MCP_AUTH_TOKEN}"
-    if [ -n "${ADO_ORG:-}" ]; then
-        az devops configure --defaults organization="https://dev.azure.com/${ADO_ORG}" \
-            && echo "[INFO] Azure CLI: org=${ADO_ORG}, PAT auth ready (AZURE_DEVOPS_EXT_PAT set)" \
-            || echo "[WARN] Azure CLI: failed to set default org"
-    else
-        echo "[INFO] Azure CLI: PAT auth ready (no ADO_ORG set, use --org per command)"
-    fi
-else
-    echo "[INFO] Azure CLI: no PAT (ADO_MCP_AUTH_TOKEN not set) — run 'az login' manually if needed"
-fi
+echo "[INFO] AI provider: openai / ${_model}${OPENAI_BASE_URL:+  (base_url=${OPENAI_BASE_URL})}"
+cline auth -p openai -k "${OPENAI_API_KEY}" -m "${_model}" "${_extra_args[@]}"
 
 # ============================================================================
-# Step 3: Launch Cline (pass through all arguments) and install openspec
+# Launch Cline (pass through all arguments)
 # ============================================================================
 openspec init --tools cline
 echo "[INFO] Starting Cline..."
