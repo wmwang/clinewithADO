@@ -157,6 +157,58 @@ A skill is a markdown instruction file (`SKILL.md`) paired with lightweight Pyth
 
 ---
 
+## Skills Are the Unit of Extension, Not a Feature List
+
+This is the most important design principle in the system.
+
+Most tools grow by modifying core code, adding configuration options, and accumulating dependencies. cline-ado takes a different approach: **the core image never changes. New capabilities come from new skills.**
+
+A skill requires only two things:
+- A `SKILL.md`: plain-language instructions telling Claude what to do and how
+- A few Python scripts (optional): for API calls that need actual code
+
+This means anyone can add a skill — no Dockerfile changes, no understanding of Cline internals, no core logic to review. **If someone on your team can write markdown and a few lines of Python, they can extend this system.**
+
+The two built-in skills are just the starting point:
+
+```mermaid
+flowchart LR
+    subgraph Core["Core Image (never changes)"]
+        Cline["cline engine"]
+        AzCLI["azure-cli"]
+        PySDK["azure-devops SDK"]
+    end
+
+    subgraph Skills["Skills (add as many as you need)"]
+        direction TB
+        S1["azure-ai-requirements\nrequirements → SDD"]
+        S2["azure-ai-apply\nimplement → PR"]
+        S3["azure-ai-review\nautomatic code review ✦"]
+        S4["azure-ai-release-notes\ngenerate release notes from work items ✦"]
+        S5["azure-ai-bug-triage\nanalyze bugs, auto-assign owners ✦"]
+        S6["... your next skill"]
+    end
+
+    Core --> Skills
+```
+
+> ✦ Not yet implemented — but adding a skill is all it takes
+
+**The bar for writing a new skill is intentionally low:**
+
+```
+.claude/skills/my-new-skill/
+├── SKILL.md      ← describe the trigger, steps, and expected output
+└── scripts/
+    └── helper.py ← only the lines that need to call an API
+```
+
+In `SKILL.md`, describe what phrase triggers the skill, what steps to follow, and what to produce. Claude reads it and executes. No deployment, no restart, no build pipeline.
+
+This model keeps the core lean while letting each team tailor automation to their own workflow — without waiting for an upstream feature request to be accepted.
+
+---
+
 ## Quick Start
 
 ### 1. Get the image
@@ -289,7 +341,7 @@ cline-ado is built on three different bets:
 
 **ADO as the interface.** Your work items, your branches, your pull requests. The AI operates within the workflow your team already has — not around it.
 
-Skills are the unit of automation. They are markdown files. Anyone on your team can read them, modify them, and understand exactly what Claude will do before running.
+**Skills as the extension model.** Want a new capability? Don't touch the core — write a skill. It's a markdown file. Anyone can read it, anyone can contribute it, and everyone knows exactly what Claude will do before it runs. The boundary of this system is set by your team, not by this repository's maintainers.
 
 Small enough to understand. Tight enough to trust.
 

@@ -146,6 +146,58 @@ Skill 就是一個 `SKILL.md` 指令檔，加上幾支輕量 Python 腳本（處
 
 ---
 
+## Skills 是擴充的單位，不是功能的列表
+
+這是整個系統最重要的設計原則。
+
+大多數工具在需要新功能時，會修改核心程式碼、加入新的設定選項、增加依賴套件。cline-ado 的做法不同：**核心 image 永遠不變，新能力透過新的 skill 加入。**
+
+一個 skill 只需要：
+- 一個 `SKILL.md`：用自然語言告訴 Claude 做什麼、怎麼做
+- 幾支 Python 腳本（可選）：處理需要程式才能做的 API 呼叫
+
+這意味著任何人都可以新增一個 skill — 不需要改 Dockerfile、不需要了解 Cline 內部運作、不需要 PR review 核心邏輯。**你的團隊成員只要能寫 markdown 和幾行 Python，就能擴充這個系統。**
+
+目前內建的兩個 skill 只是起點：
+
+```mermaid
+flowchart LR
+    subgraph Core["核心 Image（固定不變）"]
+        Cline["cline engine"]
+        AzCLI["azure-cli"]
+        PySDK["azure-devops SDK"]
+    end
+
+    subgraph Skills["Skills（可任意擴充）"]
+        direction TB
+        S1["azure-ai-requirements\n需求分析 → SDD"]
+        S2["azure-ai-apply\n實作 → PR"]
+        S3["azure-ai-review\n自動 code review ✦"]
+        S4["azure-ai-release-notes\n從 work item 生成 release note ✦"]
+        S5["azure-ai-bug-triage\n分析 bug、自動指派負責人 ✦"]
+        S6["... 你的下一個 skill"]
+    end
+
+    Core --> Skills
+```
+
+> ✦ 尚未實作，但加一個 skill 就能做到
+
+**寫一個新 skill 的門檻非常低：**
+
+```
+.claude/skills/my-new-skill/
+├── SKILL.md          ← 用中文寫也完全沒問題
+└── scripts/
+    └── helper.py     ← 只需要處理 API 呼叫的那幾行
+```
+
+`SKILL.md` 裡你只需要描述：當使用者說什麼觸發這個 skill、執行哪些步驟、預期輸出什麼。Claude 會讀懂並照著做。
+
+這個模型讓系統保持精簡，同時讓每個團隊可以根據自己的流程量身打造自動化 — 不是等待上游提供功能，而是自己就能擴充。
+
+---
+
 ## 快速開始 Quick Start
 
 ### 1. 取得 image
@@ -278,7 +330,7 @@ cline-ado 建立在三個不同的選擇上：
 
 **ADO 作為介面。** 你的 work item、你的 branch、你的 PR。AI 在你團隊已有的工作流裡運作，而不是另起一套。
 
-Skills 是自動化的基本單位。它們是 markdown 檔案。你的團隊任何人都可以讀懂、修改，在執行前就知道 Claude 會做什麼。
+**Skills 作為擴充機制。** 想要新功能？不要改核心，寫一個 skill。它是 markdown 檔，任何人都能讀懂，任何人都能貢獻，在執行前就知道 Claude 會做什麼。系統的邊界由你的團隊決定，不是由這個 repo 的 maintainer 決定。
 
 **小到可以完全理解。緊到可以放心信任。**
 
