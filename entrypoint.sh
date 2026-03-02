@@ -41,6 +41,28 @@ echo "[INFO] AI provider: openai / ${_model}${OPENAI_BASE_URL:+  (base_url=${OPE
 cline auth -p openai -k "${OPENAI_API_KEY}" -m "${_model}" "${_extra_args[@]}"
 
 # ============================================================================
+# Configure Azure DevOps (optional)
+# ============================================================================
+# If ADO_PAT is set, pre-configure az devops defaults so that both
+# the az CLI (azure-devops extension) and the Python SDK work without
+# extra auth setup inside the container.
+#
+#   az CLI  : reads AZURE_DEVOPS_EXT_PAT automatically for every az devops call
+#   Python  : access ADO_ORG / ADO_PAT / ADO_PROJECT via os.environ as usual
+#
+if [ -n "${ADO_PAT:-}" ]; then
+    if [ -z "${ADO_ORG:-}" ]; then
+        echo "[ERROR] ADO_ORG is required when ADO_PAT is set."
+        exit 1
+    fi
+    export AZURE_DEVOPS_EXT_PAT="${ADO_PAT}"
+    _az_defaults=("organization=https://dev.azure.com/${ADO_ORG}")
+    [ -n "${ADO_PROJECT:-}" ] && _az_defaults+=("project=${ADO_PROJECT}")
+    az devops configure --defaults "${_az_defaults[@]}"
+    echo "[INFO] Azure DevOps: org=${ADO_ORG}${ADO_PROJECT:+, project=${ADO_PROJECT}}"
+fi
+
+# ============================================================================
 # Launch Cline (pass through all arguments)
 # ============================================================================
 openspec init --tools cline
