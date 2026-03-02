@@ -27,12 +27,19 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
     gnupg \
+    python3 \
+    python3-pip \
     && curl -sLS https://packages.microsoft.com/keys/microsoft.asc \
        | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.gpg \
     && echo "deb [arch=$(dpkg --print-architecture)] https://packages.microsoft.com/repos/azure-cli/ bookworm main" \
        > /etc/apt/sources.list.d/azure-cli.list \
     && apt-get update && apt-get install -y azure-cli \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Azure DevOps Python SDK
+# https://pypi.org/project/azure-devops/
+# --break-system-packages is safe inside a container (Debian Bookworm PEP 668)
+RUN pip3 install --no-cache-dir --break-system-packages azure-devops
 
 # Use a global extension directory so all users (root at build-time, node at
 # runtime) share the same install. Without this, az installs to /root/.azure
