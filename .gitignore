@@ -2,6 +2,7 @@
 .env
 *.pem
 *.key
+log
 
 # macOS
 .DS_Store

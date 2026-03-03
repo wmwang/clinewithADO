@@ -62,18 +62,39 @@ flowchart TD
     PR -->|"等待人工 code review"| Dev
 ```
 
-**Container image 內容：**
+**系統架構概覽：**
 
 ```mermaid
-flowchart LR
-    subgraph IMG["Docker Image (node:22-slim, 非 root UID 1000)"]
-        direction TB
-        A["cline@2.5.0\nAI coding agent 引擎"]
-        B["azure-cli + azure-devops extension\naz devops 指令集"]
-        C["azure-devops Python SDK\nADO REST API 呼叫"]
-        D["skills/azure-ai-requirements\nPhase 1：產出設計文件"]
-        E["skills/azure-ai-apply\nPhase 2：寫程式開 PR"]
+flowchart TD
+    subgraph Repo["Project Repo  (host · git-versioned)"]
+        subgraph Skills[".cline/skills/  ——  shared by both runtimes  ——  no rebuild needed"]
+            direction LR
+            S1["azure-ai-requirements\nSKILL.md · scripts/"]
+            S2["azure-ai-apply\nSKILL.md · scripts/"]
+            S3["‹custom-skill›\nSKILL.md · scripts/"]
+        end
     end
+
+    subgraph Docker["Docker Container  (node:22-slim · UID 1000)"]
+        D1["Core Image  (immutable)\nCline v2.5.0  ·  azure-cli  ·  devops SDK\n\nCI/CD  ·  headless  ·  isolated"]
+    end
+
+    subgraph IDELocal["IDE  (local)  ·  VSCode / Cursor"]
+        I1["Cline Plugin\nsame skill system\n\ninteractive  ·  local dev"]
+    end
+
+    Skills -->|"volume mount  (.:/workspace)"| Docker
+    Skills -->|"local read"| IDELocal
+
+    subgraph Ext["External Integrations"]
+        direction LR
+        AI["AI Provider\nOpenAI-compatible\ngpt-4o  ·  AzureOAI  ·  Ollama  ·  vLLM"]
+        ADO["Azure DevOps\nWork Items  ·  SDD  ·  Repos  ·  PR\npre-configured"]
+        MCP["MCP Tools  (optional)\nGitHub  ·  Slack  ·  DB  ·  …\nuser-configurable"]
+    end
+
+    Docker --> AI & ADO & MCP
+    IDELocal --> AI & ADO & MCP
 ```
 
 ---
