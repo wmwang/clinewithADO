@@ -21,6 +21,7 @@ The result: an AI agent that reads your work items, understands your codebase, w
 ---
 
 ## Architecture
+https://lh3.googleusercontent.com/gg-dl/AOI_d_92NEhEq4Pvgea5bLsib3aqaJtKpscahsuHcdmNtS2vhfZIHZuheKcOll1TXizRGiCdPV49lKj0piQfx1LfNtJg8Tr4asi4RBjLF_RaDLshYHvD7S3Q0ycCweMvMOudvkYSlWCYqWcSh9yrGNqNkLupTkGLO5wkXKpNS_tAYtE3mb70sw=s1024-rj<img width="1024" height="572" alt="image" src="https://github.com/user-attachments/assets/431f1693-dee5-4cd5-b6b3-b604e1427fa2" />
 
 ```
   Developer
