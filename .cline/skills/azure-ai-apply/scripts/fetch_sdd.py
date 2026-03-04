@@ -30,11 +30,13 @@ import json
 import ssl
 import base64
 import re
+import urllib.parse
 import urllib.request
 import urllib.error
 
 ORG = os.environ.get("ADO_ORG", "isosoman0009")
 PROJECT = os.environ.get("ADO_PROJECT", "ai")
+PROJECT_ENCODED = urllib.parse.quote(PROJECT, safe="")
 BASE_URL = f"https://dev.azure.com/{ORG}"
 
 
@@ -76,14 +78,14 @@ def api_get(url, pat):
 
 def get_work_item(wid, pat):
     """Fetch a work item with all relations expanded."""
-    url = f"{BASE_URL}/{PROJECT}/_apis/wit/workitems/{wid}?$expand=relations&api-version=7.0"
+    url = f"{BASE_URL}/{PROJECT_ENCODED}/_apis/wit/workitems/{wid}?$expand=relations&api-version=7.0"
     return api_get(url, pat)
 
 
 def get_comments(wid, pat):
     """Fetch all Discussion comments for a work item."""
     url = (
-        f"{BASE_URL}/{PROJECT}/_apis/wit/workItems/{wid}"
+        f"{BASE_URL}/{PROJECT_ENCODED}/_apis/wit/workItems/{wid}"
         f"/comments?api-version=7.0-preview.3"
     )
     data = api_get(url, pat)

@@ -27,6 +27,7 @@ import urllib.error
 
 ORG = os.environ.get("ADO_ORG", "isosoman0009")
 PROJECT = os.environ.get("ADO_PROJECT", "dev")
+PROJECT_ENCODED = urllib.parse.quote(PROJECT, safe="")
 BASE_URL = f"https://dev.azure.com/{ORG}"
 
 
@@ -86,14 +87,14 @@ def find_candidate_ids(pat):
             f"ORDER BY [System.CreatedDate] DESC"
         )
     }
-    url = f"{BASE_URL}/{PROJECT}/_apis/wit/wiql?api-version=7.0"
+    url = f"{BASE_URL}/{PROJECT_ENCODED}/_apis/wit/wiql?api-version=7.0"
     result = make_request(url, pat, method="POST", data=wiql)
     return [item["id"] for item in result.get("workItems", [])]
 
 
 def get_work_item(wid, pat):
     """Fetch work item with full relations expanded."""
-    url = f"{BASE_URL}/{PROJECT}/_apis/wit/workitems/{wid}?$expand=relations&api-version=7.0"
+    url = f"{BASE_URL}/{PROJECT_ENCODED}/_apis/wit/workitems/{wid}?$expand=relations&api-version=7.0"
     return make_request(url, pat)
 
 
@@ -124,7 +125,7 @@ def parse_branch_relation(relation):
 
 def get_repo_info(repo_id, pat):
     """Fetch repository details by ID."""
-    url = f"{BASE_URL}/{PROJECT}/_apis/git/repositories/{repo_id}?api-version=7.0"
+    url = f"{BASE_URL}/{PROJECT_ENCODED}/_apis/git/repositories/{repo_id}?api-version=7.0"
     return make_request(url, pat)
 
 
