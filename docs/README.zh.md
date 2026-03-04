@@ -67,11 +67,17 @@ flowchart TD
 ```mermaid
 flowchart TD
     subgraph Repo["Project Repo  (host · git-versioned)"]
-        subgraph Skills[".cline/skills/  ——  shared by both runtimes  ——  no rebuild needed"]
+        subgraph Skills[".cline/skills/  ——  task procedures"]
             direction LR
             S1["azure-ai-requirements\nSKILL.md · scripts/"]
             S2["azure-ai-apply\nSKILL.md · scripts/"]
             S3["‹custom-skill›\nSKILL.md · scripts/"]
+        end
+        subgraph Workflows[".clinerules/  ——  behavioral rules"]
+            direction LR
+            W1["opsx-explore"]
+            W2["opsx-apply"]
+            W3["opsx-propose · archive · …"]
         end
     end
 
@@ -83,8 +89,8 @@ flowchart TD
         I1["Cline Plugin\nsame skill system\n\ninteractive  ·  local dev"]
     end
 
-    Skills -->|"volume mount  (.:/workspace)"| Docker
-    Skills -->|"local read"| IDELocal
+    Repo -->|"volume mount  (.:/workspace)"| Docker
+    Repo -->|"local read"| IDELocal
 
     subgraph Ext["External Integrations"]
         direction LR
@@ -363,3 +369,45 @@ cline-ado 建立在三個不同的選擇上：
 | `azure-cli` + `azure-devops` extension | 最新穩定版 |
 | `azure-devops` Python SDK | 最新穩定版 |
 | Node.js | 22 (slim) |
+  ┌─────────────────────────────────────────────────────────────────────────────┐
+  │  Project Repo  (host · git-versioned)                                       │
+  │                                                                             │
+  │  ┌─── .cline/skills/  ─── task procedures ──────────────────────────────┐  │
+  │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                │  │
+  │  │  │ azure-ai-req │  │ azure-ai-    │  │  <custom>    │                │  │
+  │  │  │ SKILL.md     │  │ apply        │  │  SKILL.md    │   ...          │  │
+  │  │  │ scripts/     │  │ SKILL.md     │  │  scripts/    │                │  │
+  │  │  └──────────────┘  └──────────────┘  └──────────────┘                │  │
+  │  └───────────────────────────────────────────────────────────────────────┘  │
+  │                                                                             │
+  │  ┌─── .clinerules/  ─── behavioral rules ────────────────────────────────┐  │
+  │  │  opsx-explore  ·  opsx-apply  ·  opsx-propose  ·  opsx-archive  ·  … │  │
+  │  └───────────────────────────────────────────────────────────────────────┘  │
+  │                                                                             │
+  │                      all loaded via volume mount (.:/workspace)             │
+  └──────────────────────────────┬──────────────────────┬───────────────────────┘
+                                 │                      │
+                        volume mount              local read
+                                 │                      │
+  ╔══════════════════════════════▼═══╗   ╔══════════════▼══════════════════════╗
+  ║  Docker Container                ║   ║  IDE  (local)                       ║
+  ║  (node:22-slim · UID 1000)       ║   ║  VSCode / Cursor                    ║
+  ║                                  ║   ║                                     ║
+  ║  ┌── Core Image (immutable) ──┐  ║   ║  ┌── Cline Plugin ───────────────┐  ║
+  ║  │ Cline v2.5.0               │  ║   ║  │ same skill system              │  ║
+  ║  │ azure-cli · devops SDK     │  ║   ║  │ developer's own context        │  ║
+  ║  └────────────────────────────┘  ║   ║  └───────────────────────────────┘  ║
+  ║                                  ║   ║                                     ║
+  ║  CI/CD · headless · isolated     ║   ║  interactive · local dev            ║
+  ╚══════════════════╤═══════════════╝   ╚═════════════════════╤═══════════════╝
+                     │                                         │
+                     └─────────────────────┬───────────────────┘
+                                           │
+           ┌───────────────────────────────┼──────────────────────────────────┐
+           │                               │                                  │
+  ┌────────▼────────────┐   ┌──────────────▼──────────┐   ┌───────────────────▼──────────┐
+  │    AI Provider      │   │    Azure DevOps          │   │   MCP Tools   (optional)     │
+  │  OpenAI-compatible  │   │  Work Items · SDD        │   │  any MCP-compliant server    │
+  │  gpt-4o · AzureOAI  │   │  Repos · Pull Request    │   │  GitHub · Slack · DB · …    │
+  │  Ollama · vLLM      │   └──────────────────────────┘   └──────────────────────────────┘
+  └─────────────────────┘       (pre-configured)                  (user-configurable)
