@@ -159,23 +159,50 @@ git push origin "$AUTO_BRANCH"
 
 ### Step 5：建立 Pull Request
 
-PR 的方向是 **auto branch → work item branch**（不是 main），讓開發者可以 review：
+PR 的方向是 **auto branch → work item branch**（不是 main），讓開發者可以 review。
 
-```bash
-az repos pr create \
-  --org https://dev.azure.com/isosoman0009 \
-  --project dev \
-  --repository <repo_name> \
-  --source-branch "$AUTO_BRANCH" \
-  --target-branch <branch> \
-  --title "<PR 標題：根據任務內容生成>" \
-  --description "<PR 說明：簡述變更內容、影響範圍>" \
-  --work-items <work_item_id> \
-  --output json
+使用 ADO REST API（python3，不依賴 az CLI）：
+
+```python
+import urllib.request, json, os, ssl, base64
+
+pat   = os.environ.get('ADO_PAT', '')
+org   = os.environ.get('ADO_ORG', 'isosoman0009')
+proj  = os.environ.get('ADO_PROJECT', 'dev')
+repo  = '<repo_name>'
+auto_branch    = '<AUTO_BRANCH>'          # e.g. auto/42
+target_branch  = '<branch>'              # work item branch
+work_item_id   = '<work_item_id>'
+pr_title       = '<PR 標題：根據任務內容生成>'
+pr_description = '<PR 說明：簡述變更內容、影響範圍>'
+
+token = base64.b64encode(f':{pat}'.encode()).decode()
+ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
+
+body = {
+    'title': pr_title,
+    'description': pr_description,
+    'sourceRefName': f'refs/heads/{auto_branch}',
+    'targetRefName': f'refs/heads/{target_branch}',
+    'workItemRefs': [{'id': str(work_item_id)}],
+}
+data = json.dumps(body).encode()
+url = f'https://dev.azure.com/{org}/{proj}/_apis/git/repositories/{repo}/pullrequests?api-version=7.1'
+req = urllib.request.Request(url, data=data, method='POST', headers={
+    'Authorization': f'Basic {token}',
+    'Content-Type': 'application/json',
+})
+with urllib.request.urlopen(req, context=ctx) as r:
+    result = json.load(r)
+
+pr_id  = result['pullRequestId']
+pr_url = f'https://dev.azure.com/{org}/{proj}/_git/{repo}/pullrequest/{pr_id}'
+print(f'PR #{pr_id}: {pr_url}')
 ```
 
-從輸出取得 `pullRequestId` 和 PR 的 URL：
-- PR URL 格式：`https://dev.azure.com/isosoman0009/dev/_git/<repo_name>/pullrequest/<pullRequestId>`
+記下 `pr_id` 和 `pr_url`，後續步驟使用。
 
 ### Step 5.5：執行測試並建立 Testing 工作項目
 
@@ -352,9 +379,8 @@ Testing 工作項目：#43 - [test] [auto] 新增健康檢查 endpoint
 | `ADO_PAT` 未設定 | 提示使用者 `export ADO_PAT=<your_pat>` |
 | 沒有符合條件的工作項目 | 告知使用者，流程結束 |
 | git clone 失敗（403） | PAT 缺少 Code 讀取權限，請使用者確認 PAT 權限 |
-| PR 建立失敗（已存在） | 以 `az repos pr list` 找到現有 PR，繼續使用該 PR URL 執行 Step 6 |
+| PR 建立失敗（已存在） | 用 REST API 查詢現有 PR：`GET .../pullrequests?searchCriteria.sourceRefName=refs/heads/{AUTO_BRANCH}&searchCriteria.status=all&api-version=7.1`，取 `[0].pullRequestId` 繼續執行 Step 6 |
 | 狀態更新失敗（400） | `Done` 可能不是此 project 的有效狀態，確認 Project Settings → Process |
-| az repos 找不到 extension | `az extension add --name azure-devops` |
 | 找不到 parent ID（REST API 回傳無 Hierarchy-Reverse relation） | 跳過掛 parent relation，Testing 工作項目仍正常建立 |
 | 測試框架偵測失敗 | 記錄「無法偵測測試框架」到 Discussion，流程繼續 |
 | 建立 Testing 工作項目失敗（REST API 4xx/5xx） | 在 Step 6 的 Discussion 中補充說明測試結果，不阻斷主流程 |
