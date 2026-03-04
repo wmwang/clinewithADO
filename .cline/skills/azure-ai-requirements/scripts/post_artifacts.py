@@ -28,12 +28,14 @@ import json
 import ssl
 import base64
 import re
+import urllib.parse
 import urllib.request
 import urllib.error
 from datetime import datetime
 
 ORG = os.environ.get("ADO_ORG", "isosoman0009")
 PROJECT = os.environ.get("ADO_PROJECT", "ai")
+PROJECT_ENCODED = urllib.parse.quote(PROJECT, safe="")
 BASE_URL = f"https://dev.azure.com/{ORG}"
 
 
@@ -170,7 +172,7 @@ def read_file(path):
 def post_discussion_comment(work_item_id, html_content, pat):
     """Post a single HTML comment to the work item Discussion."""
     url = (
-        f"{BASE_URL}/{PROJECT}/_apis/wit/workItems/{work_item_id}"
+        f"{BASE_URL}/{PROJECT_ENCODED}/_apis/wit/workItems/{work_item_id}"
         f"/comments?api-version=7.0-preview.3"
     )
     return api_request(url, pat, method="POST", data={"text": html_content})
@@ -178,7 +180,7 @@ def post_discussion_comment(work_item_id, html_content, pat):
 
 def update_state_to_done(work_item_id, pat):
     """Patch the work item state to Done."""
-    url = f"{BASE_URL}/{PROJECT}/_apis/wit/workitems/{work_item_id}?api-version=7.0"
+    url = f"{BASE_URL}/{PROJECT_ENCODED}/_apis/wit/workitems/{work_item_id}?api-version=7.0"
     patch = [{"op": "replace", "path": "/fields/System.State", "value": "Done"}]
     return api_request(
         url, pat,
