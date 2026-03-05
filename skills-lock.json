@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "skills": {
+    "azure-devops": {
+      "source": "/Users/isosoman/Documents/repo/deepwiki_claude/clinewithADO/Skills",
+      "sourceType": "local",
+      "computedHash": "5b14264a336c429f008b62af3598dcd5abbda4596ba766be0aaa4b506677d3cb"
+    },
+    "kiro-skill": {
+      "source": "/Users/isosoman/Documents/repo/deepwiki_claude/clinewithADO/Skills",
+      "sourceType": "local",
+      "computedHash": "8122115eafa1da05d65e0c977b45d8ff407df59c065006f893de861d8ad43ebf"
+    },
+    "legacy-code-analyzer": {
+      "source": "/Users/isosoman/Documents/repo/deepwiki_claude/clinewithADO/Skills",
+      "sourceType": "local",
+      "computedHash": "7e2f29800aea169b2f177795db70a3f689a531a9d765730d52039243f8d2f753"
+    },
+    "spec-kit-skill": {
+      "source": "/Users/isosoman/Documents/repo/deepwiki_claude/clinewithADO/Skills",
+      "sourceType": "local",
+      "computedHash": "3cfc36c7d55442522876735674204f9d36a9fe93e28bbf5c7c5e06f5b9739c9d"
+    }
+  }
+}

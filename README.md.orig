@@ -353,10 +353,7 @@ Small enough to understand. Tight enough to trust.
 
 | Package | Version |
 |---------|---------|
-| `cline` / `oh-my-opencode` | 2.5.0 / latest |
+| `cline` | 2.5.0 |
 | `azure-cli` + `azure-devops` extension | latest stable |
 | `azure-devops` Python SDK | latest stable |
 | Node.js | 22 (slim) |
-| Python + `venv` + `pip` | 3 (Debian) |
-| Java (`default-jdk`) | 17 (Debian) |
-| Maven | latest stable (Debian) |
