@@ -29,13 +29,13 @@ cd <repo>
 | 引擎 | 安裝位置（專案） | 安裝位置（全域） |
 |------|-----------------|-----------------|
 | **Cline** | `.clinerules/` | `~/.cline/rules/` |
-| **OpenCode** | `.opencode/commands/` | `~/.config/opencode/commands/` |
+| **OpenCode** | `.opencode/command/` | `~/.config/opencode/commands/` |
 
 ## 套件詳細說明
 
 ### Superpower Skills
 
-技能文件放在 `.clinerules/superpower-skills/` 或 `.opencode/commands/superpower/`。
+技能文件放在 `.clinerules/superpower-skills/` 或 `.opencode/command/superpower/`。
 
 AI 工具會自動讀取，使用方式：
 ```
@@ -59,7 +59,7 @@ AI 工具會自動讀取，使用方式：
 
 ### BMAD Method
 
-角色文件放在 `.clinerules/bmad/` 或 `.opencode/commands/bmad/`。
+角色文件放在 `.clinerules/bmad/` 或 `.opencode/command/bmad/`。
 
 呼叫方式：
 ```
@@ -176,8 +176,8 @@ cp -r ai-assets/superpower/skills/. .clinerules/superpower-skills/
 
 **OpenCode 專案安裝 BMAD：**
 ```bash
-mkdir -p .opencode/commands/bmad
-cp ai-assets/bmad-method/.bmad-core/agents/*.md .opencode/commands/bmad/
+mkdir -p .opencode/command/bmad
+cp ai-assets/bmad-method/.bmad-core/agents/*.md .opencode/command/bmad/
 ```
 
 **安裝 OpenSpec：**

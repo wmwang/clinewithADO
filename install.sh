@@ -416,8 +416,9 @@ install_superpower() {
 
   if [ "$engine" = "opencode" ] || [ "$engine" = "both" ]; then
     if [ "$scope" = "project" ]; then
-      local dst="$TARGET_DIR/.opencode/commands/superpower"
+      local dst="$TARGET_DIR/.opencode/command/superpower"
       # OpenCode commands are markdown files - flatten skill directories
+      # Note: OpenCode uses .opencode/command/ (singular) per official spec
       mkdir -p "$dst"
       find "$src" -name "SKILL.md" | while read -r skill_file; do
         local skill_name
@@ -429,7 +430,7 @@ install_superpower() {
       print_success "OpenCode (project): Superpower Skills → $(short_path "$dst")"
       INSTALL_LOG+=("OpenCode (project): Superpower Skills → $dst")
     else
-      local dst="$HOME/.config/opencode/commands/superpower"
+      local dst="$HOME/.config/opencode/command/superpower"
       mkdir -p "$dst"
       find "$src" -name "SKILL.md" | while read -r skill_file; do
         local skill_name
@@ -487,10 +488,10 @@ BMADEOF
 
   if [ "$engine" = "opencode" ] || [ "$engine" = "both" ]; then
     if [ "$scope" = "project" ]; then
-      local dst="$TARGET_DIR/.opencode/commands/bmad"
+      local dst="$TARGET_DIR/.opencode/command/bmad"
       copy_dir "$src/agents" "$dst" "OpenCode (project): BMAD agents"
     else
-      local dst="$HOME/.config/opencode/commands/bmad"
+      local dst="$HOME/.config/opencode/command/bmad"
       copy_dir "$src/agents" "$dst" "OpenCode (global): BMAD agents"
     fi
   fi
@@ -528,8 +529,8 @@ install_openspec() {
 
   # For OpenCode, also add command stubs
   if [ "$engine" = "opencode" ] || [ "$engine" = "both" ]; then
-    mkdir -p "$dst/.opencode/commands"
-    cat > "$dst/.opencode/commands/opsx-propose.md" <<'EOMD'
+    mkdir -p "$dst/.opencode/command"
+    cat > "$dst/.opencode/command/opsx-propose.md" <<'EOMD'
 ---
 description: "OpenSpec: Start a new feature with proposal → specs → design → tasks"
 ---
@@ -546,7 +547,7 @@ Create the folder `openspec/changes/$ARGUMENTS/` and generate:
 
 Follow the instructions in `AGENTS.md` for the complete workflow.
 EOMD
-    print_success "OpenCode: opsx-propose command → $(short_path "$dst/.opencode/commands/opsx-propose.md")"
+    print_success "OpenCode: opsx-propose command → $(short_path "$dst/.opencode/command/opsx-propose.md")"
   fi
 }
 
@@ -586,9 +587,9 @@ install_speckit() {
 
   # For OpenCode: create commands
   if [ "$engine" = "opencode" ] || [ "$engine" = "both" ]; then
-    mkdir -p "$dst/.opencode/commands"
-    cp "$src/templates/commands/"*.md "$dst/.opencode/commands/" 2>/dev/null || true
-    print_success "OpenCode: speckit commands → $(short_path "$dst/.opencode/commands/")"
+    mkdir -p "$dst/.opencode/command"
+    cp "$src/templates/commands/"*.md "$dst/.opencode/command/" 2>/dev/null || true
+    print_success "OpenCode: speckit commands → $(short_path "$dst/.opencode/command/")"
   fi
 }
 
@@ -659,10 +660,10 @@ print_summary() {
   case "$SELECTED_ENGINE" in
     opencode|both)
       if [ "$SELECTED_SCOPE" = "global" ]; then
-        print_info "OpenCode: 全域命令已安裝到 ~/.config/opencode/commands/"
+        print_info "OpenCode: 全域命令已安裝到 ~/.config/opencode/command/"
         print_info "  啟動 opencode 即可使用"
       else
-        print_info "OpenCode: 專案命令已安裝到 .opencode/commands/"
+        print_info "OpenCode: 專案命令已安裝到 .opencode/command/"
         print_info "  在此目錄執行 opencode 即可使用"
       fi
       ;;
