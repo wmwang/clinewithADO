@@ -1,3 +1,8 @@
+---
+name: superpower-systematic-debugging
+description: Debug complex issues using a structured hypothesis-driven approach. Use when facing hard-to-reproduce bugs, performance issues, or complex system failures.
+---
+
 # Systematic Debugging Skill
 
 ## Purpose

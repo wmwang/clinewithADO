@@ -1,3 +1,8 @@
+---
+name: superpower-executing-plans
+description: Execute a written implementation plan systematically with checkpoints and progress reports. Use when following a pre-written plan file to implement a feature.
+---
+
 # Executing Plans Skill
 
 ## Purpose

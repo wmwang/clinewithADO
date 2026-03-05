@@ -1,3 +1,8 @@
+---
+name: superpower-subagent-driven-development
+description: Execute implementation plans by spawning focused subagents for parallel or sequential work. Use for complex features requiring coordinated parallel implementation.
+---
+
 # Subagent-Driven Development Skill
 
 ## Purpose

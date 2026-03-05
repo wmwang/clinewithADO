@@ -1,3 +1,8 @@
+---
+name: superpower-when-stuck
+description: Recover from being stuck on a problem using structured unblocking techniques. Use when progress has stalled and previous approaches have not worked.
+---
+
 # When Stuck Skill
 
 ## Purpose

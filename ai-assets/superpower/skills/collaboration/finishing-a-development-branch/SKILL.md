@@ -1,3 +1,8 @@
+---
+name: superpower-finishing-branch
+description: Ensure a development branch is truly complete before merging: tests pass, code is clean, PR is well-documented. Use before creating a pull request.
+---
+
 # Finishing a Development Branch Skill
 
 ## Purpose

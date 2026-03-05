@@ -1,3 +1,8 @@
+---
+name: superpower-root-cause-tracing
+description: Trace bugs to their true root cause rather than fixing symptoms. Use when a bug keeps recurring or the immediate fix does not resolve the underlying issue.
+---
+
 # Root Cause Tracing Skill
 
 ## Purpose

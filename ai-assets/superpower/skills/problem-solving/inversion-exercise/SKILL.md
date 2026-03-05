@@ -1,3 +1,8 @@
+---
+name: superpower-inversion-exercise
+description: Solve problems by inverting them: identify what would cause failure, then avoid those paths. Use when stuck on a difficult design decision or architecture choice.
+---
+
 # Inversion Exercise Skill
 
 ## Purpose

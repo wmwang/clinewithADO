@@ -1,3 +1,8 @@
+---
+name: superpower-writing-plans
+description: Create detailed implementation plans that any engineer can execute without codebase context. Use before implementing a complex feature to enable async work and clear progress tracking.
+---
+
 # Writing Plans Skill
 
 ## Purpose

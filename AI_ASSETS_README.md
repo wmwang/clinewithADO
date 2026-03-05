@@ -4,6 +4,20 @@
 
 ## 快速開始
 
+### 方法一：`npx skills`（推薦，有 npm 環境者）
+
+```bash
+# 安裝到目前專案（互動式選擇 agents）
+npx skills add /path/to/this-repo/ai-assets/superpower
+
+# 安裝並指定 agents
+npx skills add /path/to/this-repo/ai-assets/superpower -a cline -a opencode
+```
+
+安裝完成後 skills 會出現在各 agent 的命令清單中。
+
+### 方法二：install.sh（無 npm 環境、或需要 BMAD/OpenSpec/Spec Kit）
+
 ```bash
 git clone <this-repo>
 cd <repo>
@@ -11,9 +25,11 @@ cd <repo>
 ```
 
 按照互動式選單選擇：
-1. 要安裝哪些套件
+1. 要安裝哪些套件（Superpower / BMAD / OpenSpec / Spec Kit）
 2. 使用的 AI 引擎（Cline / OpenCode / 兩者）
 3. 安裝範圍（專案 / 全域）
+
+> **差異**：`npx skills` 只支援 Superpower Skills。BMAD Method、OpenSpec、Spec Kit 需用 `install.sh`。
 
 ## 包含的套件
 

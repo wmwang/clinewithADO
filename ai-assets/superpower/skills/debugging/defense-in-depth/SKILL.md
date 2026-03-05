@@ -1,3 +1,8 @@
+---
+name: superpower-defense-in-depth
+description: Apply layered defensive coding patterns to prevent bugs from propagating. Use when implementing security-sensitive code, data validation, or critical business logic.
+---
+
 # Defense-in-Depth Debugging Skill
 
 ## Purpose

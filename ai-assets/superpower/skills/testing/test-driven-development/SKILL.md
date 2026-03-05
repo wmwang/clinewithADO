@@ -1,3 +1,8 @@
+---
+name: superpower-test-driven-development
+description: Write tests before implementation following the red-green-refactor cycle. Use when starting a new feature or fixing a bug to ensure test coverage and design quality.
+---
+
 # Test-Driven Development Skill
 
 ## Purpose

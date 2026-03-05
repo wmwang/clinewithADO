@@ -1,3 +1,8 @@
+---
+name: superpower-brainstorming
+description: Structure collaborative problem exploration before writing code. Use when starting a new feature, exploring solutions, or needing to understand a problem deeply before implementation.
+---
+
 # Brainstorming Skill
 
 ## Purpose
