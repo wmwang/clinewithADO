@@ -193,7 +193,6 @@ ask_packages() {
 
   local pkg_options=(
     "Superpower Skills  (brainstorm / TDD / debugging / planning)"
-    "BMAD Method        (AI 產品開發角色：analyst / PM / architect / dev / SM)"
     "OpenSpec           (Spec-driven 開發：proposal → specs → design → tasks)"
     "Spec Kit           (GitHub spec-driven 開發框架)"
   )
@@ -204,7 +203,6 @@ ask_packages() {
   for item in "${MULTISELECT_RESULT[@]}"; do
     case "$item" in
       Superpower*) SELECTED_PACKAGES+=("superpower") ;;
-      BMAD*)       SELECTED_PACKAGES+=("bmad-method") ;;
       OpenSpec*)   SELECTED_PACKAGES+=("openspec") ;;
       Spec\ Kit*)  SELECTED_PACKAGES+=("spec-kit") ;;
     esac
@@ -400,7 +398,7 @@ install_superpower() {
   echo ""
   echo -e "  ${MAGENTA}▸ Superpower Skills${NC}"
 
-  local src="$ASSETS_DIR/superpower/skills"
+  local src="$ASSETS_DIR/skills"
 
   if [ "$engine" = "cline" ] || [ "$engine" = "both" ]; then
     if [ "$scope" = "project" ]; then
@@ -441,58 +439,6 @@ install_superpower() {
       done
       print_success "OpenCode (global): Superpower Skills → $(short_path "$dst")"
       INSTALL_LOG+=("OpenCode (global): Superpower Skills → $dst")
-    fi
-  fi
-}
-
-install_bmad() {
-  local engine="$1"
-  local scope="$2"
-
-  echo ""
-  echo -e "  ${MAGENTA}▸ BMAD Method${NC}"
-
-  local src="$ASSETS_DIR/bmad-method/.bmad-core"
-
-  if [ "$engine" = "cline" ] || [ "$engine" = "both" ]; then
-    if [ "$scope" = "project" ]; then
-      local dst="$TARGET_DIR/.clinerules/bmad"
-      copy_dir "$src/agents" "$dst/agents" "Cline (project): BMAD agents"
-      # Create a loader file for .clinerules
-      cat > "$TARGET_DIR/.clinerules/bmad-loader.md" <<'BMADEOF'
-# BMAD Method - Agent Loader
-
-This project uses the BMAD Method agents. Load agents from `.clinerules/bmad/agents/`.
-
-## Available Agents
-
-- **Mary** (analyst.md) - Business Analyst
-- **John** (pm.md) - Product Manager
-- **Winston** (architect.md) - Software Architect
-- **Amelia** (dev.md) - Developer
-- **Bob** (sm.md) - Scrum Master
-
-## Usage
-
-Invoke an agent by name in your prompt. The agent's instructions are in the corresponding file.
-
-Example: "Mary, help me write requirements for the login feature."
-BMADEOF
-      print_success "Cline (project): BMAD loader → $(short_path "$TARGET_DIR/.clinerules/bmad-loader.md")"
-    else
-      local dst="$HOME/.cline/rules/bmad"
-      copy_dir "$src/agents" "$dst/agents" "Cline (global): BMAD agents"
-      print_info "請將 $dst 加入 VS Code Cline 設定的 Custom Instructions"
-    fi
-  fi
-
-  if [ "$engine" = "opencode" ] || [ "$engine" = "both" ]; then
-    if [ "$scope" = "project" ]; then
-      local dst="$TARGET_DIR/.opencode/command/bmad"
-      copy_dir "$src/agents" "$dst" "OpenCode (project): BMAD agents"
-    else
-      local dst="$HOME/.config/opencode/command/bmad"
-      copy_dir "$src/agents" "$dst" "OpenCode (global): BMAD agents"
     fi
   fi
 }
@@ -612,7 +558,6 @@ do_install() {
   for pkg in "${SELECTED_PACKAGES[@]}"; do
     case "$pkg" in
       superpower) install_superpower "${engines[0]}" "$SELECTED_SCOPE" ;;
-      bmad-method) install_bmad "${engines[0]}" "$SELECTED_SCOPE" ;;
       openspec)   install_openspec "${engines[0]}" "$SELECTED_SCOPE" ;;
       spec-kit)   install_speckit "${engines[0]}" "$SELECTED_SCOPE" ;;
     esac
@@ -649,9 +594,6 @@ print_summary() {
         print_info "  File → Preferences → Settings → 搜尋 'Cline Custom Instructions'"
         if echo "${SELECTED_PACKAGES[@]}" | grep -q "superpower"; then
           print_item "~/.cline/rules/superpower-skills"
-        fi
-        if echo "${SELECTED_PACKAGES[@]}" | grep -q "bmad"; then
-          print_item "~/.cline/rules/bmad"
         fi
       fi
       ;;
