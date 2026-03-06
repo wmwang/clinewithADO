@@ -76,6 +76,8 @@ Rules: MUST use `- [ ]` format. Group under `## N.` sections. Order by dependenc
 
 ## Steps
 
+> **Language**: All generated artifact content (proposal.md, spec.md, design.md, tasks.md) MUST be written in Traditional Chinese (繁體中文). File names and directory names remain in kebab-case English.
+
 ### 1. Select the change
 
 If no name provided:
