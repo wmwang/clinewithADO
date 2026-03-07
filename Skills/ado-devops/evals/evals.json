@@ -1,0 +1,69 @@
+{
+  "skill_name": "ado-devops",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "幫我列出 ADO dev project 裡有哪些 repository，以及 dev 這個 repo 有哪些 branch",
+      "expected_output": "列出 dev 和 test 兩個 repo，並列出 dev repo 的 branch（main, feature/demo）",
+      "files": [],
+      "assertions": [
+        {
+          "text": "回應中同時提到 'dev' 和 'test' 兩個 repository 名稱",
+          "type": "contains_both_repos"
+        },
+        {
+          "text": "回應中提到 'main' branch",
+          "type": "mentions_main_branch"
+        },
+        {
+          "text": "回應中提到 'feature/demo' branch",
+          "type": "mentions_feature_branch"
+        },
+        {
+          "text": "回應是人類可讀格式，不是原始 JSON",
+          "type": "human_readable"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "查一下 ADO dev project 最近有哪些工單，列出最新的 5 筆，包含 ID、標題和狀態",
+      "expected_output": "列出工單清單，含數字 ID（如 #21, #20）、標題、狀態（Done / To Do）",
+      "files": [],
+      "assertions": [
+        {
+          "text": "回應中包含數字工單 ID（如 21、20、15 等）",
+          "type": "contains_work_item_ids"
+        },
+        {
+          "text": "回應中顯示工單狀態（Done 或 To Do）",
+          "type": "shows_state"
+        },
+        {
+          "text": "回應中出現工單標題文字",
+          "type": "shows_titles"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "幫我在 ADO 全文搜尋工單，找有提到 'test' 的工單，告訴我找到幾筆以及標題是什麼",
+      "expected_output": "使用 search.py workitem 搜尋，找到 3 筆含 'test' 的工單並列出標題",
+      "files": [],
+      "assertions": [
+        {
+          "text": "找到至少 1 筆結果（search 'test' 應有結果）",
+          "type": "finds_results"
+        },
+        {
+          "text": "回應中說明找到幾筆（total count）",
+          "type": "mentions_count"
+        },
+        {
+          "text": "回應中列出搜尋結果的標題",
+          "type": "lists_titles"
+        }
+      ]
+    }
+  ]
+}
