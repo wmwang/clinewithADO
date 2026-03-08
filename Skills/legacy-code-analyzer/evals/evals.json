@@ -3,14 +3,14 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "我剛接手一個舊的 VB6 庫存管理系統，完全不知道這東西在幹嘛。能幫我分析一下這個專案嗎？路徑是 /Users/isosoman/Documents/repo/deepwiki_claude/skillPlayground/.claude/skills/legacy-code-analyzer-workspace/test-projects/vb6-inventory",
-      "expected_output": "一份 HTML 報告，包含：(1) 專案概覽（VB6 類型、檔案統計）；(2) 兩個 Form 的 UI 說明（frmMain 庫存清單、frmProduct 商品編輯）；(3) 資料庫操作（SQL Server、使用的 Table、主要 SQL 查詢）；(4) 業務邏輯（加權平均成本、安全庫存、EOQ 等庫存計算公式）；(5) 模組函式索引",
+      "prompt": "我剛接手一個舊的 VB6 庫存管理系統，完全不知道這東西在幹嘛。只分析這個子專案：/Users/isosoman/Documents/repo/deepwiki_claude/skillPlayground/.claude/skills/legacy-code-analyzer-workspace/test-projects/vb6-inventory。請幫我產出可交接的詳細分析包，重點要有 form 事件到資料庫函式的對應、主要 function call chain，並整理未來如果要拆成 Java Spring API，哪些 controller/service/repository 會是候選。",
+      "expected_output": "在目標子專案下建立 .legacy-analysis 報告包，至少包含 00-overview.md、02-entrypoints-and-flows.md、03-function-relationships.md、05-ui-and-form-behavior.md、06-spring-migration-candidates.md，以及 artifacts/function-index.csv、call-edges.csv、sql-operations.csv、inventory.json。內容需指出 frmMain 或 frmProduct 與 modDatabase/clsInventory 的主要關係，涵蓋 LoadProducts、GetProducts、DeleteProduct 等呼叫鏈，並整理 Products、Orders、OrderDetails 等資料表互動。",
       "files": []
     },
     {
       "id": 2,
-      "prompt": "我們公司有一套 VB.NET 的訂單管理系統要準備移轉到新平台，請幫我整理一份移轉參考文件，專案在這裡：/Users/isosoman/Documents/repo/deepwiki_claude/skillPlayground/.claude/skills/legacy-code-analyzer-workspace/test-projects/vbnet-orders",
-      "expected_output": "一份 HTML 報告，包含：(1) 專案概覽（VB.NET、各檔案統計）；(2) 訂單清單畫面（frmOrderList）的控制項說明與事件；(3) 資料庫操作（SQL Server、Orders/Customers/OrderDetails 等 Table、分頁查詢/取消訂單的 SQL）；(4) 業務邏輯（訂單金額計算流程、VIP 折扣規則、運費規則）；(5) 函式索引",
+      "prompt": "我們公司有一套 VB.NET 的訂單管理子系統要準備移轉到新平台，請只分析這個子專案：/Users/isosoman/Documents/repo/deepwiki_claude/skillPlayground/.claude/skills/legacy-code-analyzer-workspace/test-projects/vbnet-orders。我要的是移轉參考文件，不是單純摘要；請特別拆出 UI 事件、訂單查詢/取消流程、計價邏輯、資料庫存取關係，並提出未來 Spring API 的 endpoint 與 service 邊界候選。",
+      "expected_output": "在目標子專案下建立 .legacy-analysis 報告包，至少包含 00-overview.md、02-entrypoints-and-flows.md、03-function-relationships.md、04-data-access.md、06-spring-migration-candidates.md，以及 artifacts/function-index.csv、call-edges.csv、sql-operations.csv、inventory.json。內容需涵蓋 frmOrderList、DatabaseHelper、OrderCalculator 之間的關係，說明 LoadOrders、GetOrders、CancelOrder、CalcOrderTotal、IsVipEligible 等主要流程與 Orders/Customers/OrderDetails 等資料表互動。",
       "files": []
     }
   ]

@@ -2,6 +2,10 @@
 
 > 開源 AI coding agent，整合企業 ADO 工作流，在隔離的 Docker 環境裡運行。
 
+## 延伸手冊
+
+- [Legacy Code Analyzer 使用者手冊](./legacy-code-analyzer-user-manual.md)
+
 ---
 
 ## 為什麼需要這個？

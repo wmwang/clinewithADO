@@ -1,0 +1,4 @@
+interface:
+  display_name: "Legacy Code Analyzer"
+  short_description: "Legacy VB6/.NET migration analysis workflow"
+  default_prompt: "Use $legacy-code-analyzer to inspect this VB6/VB.NET subproject and map function relationships for a Spring migration."
