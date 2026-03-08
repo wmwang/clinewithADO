@@ -5,6 +5,7 @@
 ## 延伸手冊
 
 - [Legacy Code Analyzer 使用者手冊](./legacy-code-analyzer-user-manual.md)
+- [三套 SDD Skill 比較：BMAD、OpenSpec、Spec-Kit](./sdd-skills-comparison.zh.md)
 
 ---
 
