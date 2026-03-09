@@ -2,6 +2,8 @@
 name: speckit-constitution
 description: 建立或更新專案憲法——治理所有規劃與實作的架構原則。不需安裝任何 CLI。
 ---
+> **重要**：所有檔案讀寫操作均相對於使用者的 **project root（當前工作目錄）**，不是 skill 檔案所在路徑。如有疑慮，先執行 `pwd` 確認再操作。
+
 
 ## 使用者輸入
 

@@ -2,6 +2,8 @@
 name: speckit-clarify
 description: 針對當前 feature spec 提出最多 5 個精準釐清問題，並將答案寫回 spec.md。不需安裝任何 CLI。
 ---
+> **重要**：所有檔案讀寫操作均相對於使用者的 **project root（當前工作目錄）**，不是 skill 檔案所在路徑。如有疑慮，先執行 `pwd` 確認再操作。
+
 
 ## 使用者輸入
 
