@@ -52,48 +52,55 @@
 
 ### `05-ui-and-form-behavior.md`
 
-必含內容（以 SA 角度、白話撰寫，讓不懂舊程式的同事也能看懂）：
-- 這個 Form 的用途（一句話說清楚）。
-- 使用者操作流程（步驟描述，不是程式碼）。
-- 每個按鈕/動作背後在做什麼（白話語意，非函式名稱）。
-- DB 操作：查哪些表、取什麼資料、更新什麼欄位。
-- CORBA 呼叫（`Tx*` / `TSMC_tx*`）：白話說明業務意義（例如「查詢製程狀態」、「觸發機台移送」）。
-- 畫面狀態與全域狀態的耦合風險。
-- 哪些邏輯有風險（無驗證、直接刪除、共用全域物件等）。
+**模式 A 輸出路徑**：`.legacy-code-analyzer/{frm-name}/05-ui-and-form-behavior.md`
+**模式 B 輸出路徑**：`<target-path>/.legacy-analysis/<YYYYMMDD>-<slug>/05-ui-and-form-behavior.md`
 
-### `05b-form-ascii-layout.txt`
+檔案結構（模式 A 固定格式）：
 
-僅模式 A（單一 Form 分析）需要。
-
-格式範例：
 ```
-+--[ 客戶查詢 ]-------------------------------------------+
-| 客戶編號:  [txtCustNo____________________]  [查詢]      |
-| 客戶姓名:  [txtCustName_________________]               |
-| 地址:      [txtAddress__________________]               |
-|                                                          |
-| [GridView: 訂單清單]                                    |
-| | 訂單編號 | 日期       | 金額   | 狀態  |             |
-| |----------|------------|--------|-------|             |
-|                                                          |
-| [確認]  [取消]  [列印]                                   |
-+---------------------------------------------------------+
+## Form 佈局示意
+
++--[ Form Caption ]---...---+
+| ...（ASCII 圖）...         |
++---------------------------+
+
+> ⚠️ 圖為 AI 模擬示意，可能失真，請以實際 OMI 程式呈現為主。
+
+---
+
+## 功能說明
+...
 ```
 
-規則：
+ASCII 佈局規則：
 - 按控制項的 `Top`/`Left` 座標由上到下、由左到右排列。
 - 使用控制項的 `Caption`（按鈕、Label）或 `Name`（TextBox、ComboBox）標示。
 - DataGrid / ListView 用框線加欄位名稱表示。
 - 不需要精確像素，重點是讓人一眼看懂表單布局與操作動線。
 
+功能說明必含內容（以 SA 角度、**繁體中文**白話撰寫）：
+- 這個 Form 的用途（一句話說清楚）。
+- 使用者操作流程（步驟描述，不是程式碼）。
+- 每個按鈕/動作背後在做什麼（白話語意，非函式名稱）。
+- DB 操作：查哪些表、取什麼資料、更新什麼欄位。
+- CORBA 呼叫（`Tx*` / `TSMC_tx*`）：白話說明業務意義。
+- 畫面狀態與全域狀態的耦合風險。
+- 哪些邏輯有風險（無驗證、直接刪除、共用全域物件等）。
+
+> 模式 A 不需另外建立 `05b-form-ascii-layout.txt`，ASCII 圖與說明整合在同一檔案。
+
 ### `06-java-ca-api-spec.md`
 
-依照 [references/java-ca-spec.md](java-ca-spec.md) 的模板，為 Form 的業務邏輯產出完整的 Java Clean Architecture API 規格：
+**模式 A 輸出路徑**：`.legacy-code-analyzer/{frm-name}/06-java-ca-api-spec.md`
+**模式 B 輸出路徑**：`<target-path>/.legacy-analysis/<YYYYMMDD>-<slug>/06-java-ca-api-spec.md`
+
+依照 [references/java-ca-spec.md](java-ca-spec.md) 的模板，為 Form 的業務邏輯產出完整的 Java Clean Architecture API 規格。全文使用**繁體中文**撰寫說明文字。
 
 必含內容：
 - 模組名稱與業務邊界說明。
 - 每個業務動作對應的 API Endpoint（HTTP method、path、summary）。
 - 每個 endpoint 對應的 Use Case（介面名稱、方法簽名、input command/query、output response）。
+- **Request / Response 欄位用表格呈現**（欄位名稱、型別、必填、說明）。
 - Domain Entity 定義（欄位、業務規則）。
 - Repository 介面（out port，僅列方法簽名，不含 SQL）。
 - CORBA / 外部系統呼叫對應的 Integration Adapter 介面（out port）。

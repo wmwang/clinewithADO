@@ -24,26 +24,40 @@ description: 深度分析 VB6、VB.NET、C# 舊系統或 monorepo 式 legacy cod
 
 ## Workflow（模式 A：單一 Form）
 
-### Step 1 — 解析 Form 結構，畫出 ASCII 佈局
+### Step 0 — 確認輸出目錄
 
-讀取 `.frm` 檔，找出所有控制項（TextBox、ComboBox、Label、CommandButton、DataGrid 等）與其 `Caption`、`Name`、`TabIndex`、座標屬性（`Left`、`Top`、`Width`、`Height`），畫出近似的 ASCII 示意圖：
+模式 A 的所有輸出集中在：
 
 ```
-+--[ Form Caption ]------------------------------------------+
-| 欄位標籤:  [TextBox Name____________]                      |
-| 下拉選單:  [ComboBox▼              ]                       |
-|                                                             |
-| [CommandButton1]  [CommandButton2]  [CommandButton3]        |
-+------------------------------------------------------------+
+.legacy-code-analyzer/{frm-檔名不含副檔名}/
 ```
 
-規則：
+例如分析 `OMVP820.frm`，輸出目錄為 `.legacy-code-analyzer/OMVP820/`。
+
+建立目錄：
+```bash
+mkdir -p ".legacy-code-analyzer/{frm-name}"
+```
+
+---
+
+### Step 1 — 解析 Form 結構，畫出 ASCII 佈局，整合至 SA 說明
+
+讀取 `.frm` 檔，找出所有控制項（TextBox、ComboBox、Label、CommandButton、DataGrid 等）與其 `Caption`、`Name`、`TabIndex`、座標屬性（`Left`、`Top`、`Width`、`Height`），畫出近似的 ASCII 示意圖。
+
+ASCII 佈局規則：
 - 按 `Top`/`Left` 排列，由上到下、由左到右。
 - 按鈕集中在底部或右側。
 - `Caption` 用來顯示，沒有 Caption 就用 `Name`。
 - 不需要精確像素，重點是讓人一眼看懂表單用途與操作流程。
 
-輸出至：`05b-form-ascii-layout.txt`
+**ASCII 圖放在 `05-ui-and-form-behavior.md` 最上方**，圖後立即加上免責聲明：
+
+```
+> ⚠️ 圖為 AI 模擬示意，可能失真，請以實際 OMI 程式呈現為主。
+```
+
+不需要另外建立 `05b-form-ascii-layout.txt`。
 
 ---
 
@@ -96,26 +110,34 @@ description: 深度分析 VB6、VB.NET、C# 舊系統或 monorepo 式 legacy cod
 
 ### Step 5 — 產出 SA 說明文件
 
-以 SA（系統分析師）角度撰寫 `05-ui-and-form-behavior.md`，讓不懂舊程式的同事也能看懂：
+輸出至 `.legacy-code-analyzer/{frm-name}/05-ui-and-form-behavior.md`。
 
-- 這個 Form 的用途是什麼（一句話）
-- 使用者操作流程（步驟描述，不是程式碼）
-- 每個按鈕/動作背後在做什麼（白話）
-- DB 查詢到哪些表、取什麼資料、更新什麼
-- CORBA 呼叫代表什麼業務動作
-- 哪些邏輯有風險（無驗證、直接刪除、共用全域變數等）
+檔案結構：
+1. **最上方**：Step 1 產出的 ASCII form 佈局圖
+2. 圖後緊接免責聲明：`> ⚠️ 圖為 AI 模擬示意，可能失真，請以實際 OMI 程式呈現為主。`
+3. **以下**：以 SA（系統分析師）角度、**繁體中文**撰寫說明，讓不懂舊程式的同事也能看懂：
+   - 這個 Form 的用途是什麼（一句話）
+   - 使用者操作流程（步驟描述，不是程式碼）
+   - 每個按鈕/動作背後在做什麼（白話）
+   - DB 查詢到哪些表、取什麼資料、更新什麼
+   - CORBA 呼叫代表什麼業務動作
+   - 哪些邏輯有風險（無驗證、直接刪除、共用全域變數等）
 
 ---
 
 ### Step 6 — 生成 Java Clean Architecture API 規格
 
-根據分析結果，依照 `references/java-ca-spec.md` 的模板，為這個 Form 的業務邏輯產出 `06-java-ca-api-spec.md`：
+輸出至 `.legacy-code-analyzer/{frm-name}/06-java-ca-api-spec.md`。
+
+根據分析結果，依照 `references/java-ca-spec.md` 的模板，為這個 Form 的業務邏輯產出規格：
 
 - 每個重要業務動作（按鈕功能）對應一個 Use Case
 - 產出 Controller endpoint、Use Case 定義、input port、output port、Domain entity、Repository interface
 - 遵循團隊現有的 Ports & Adapters 架構（參見 `references/java-ca-spec.md`）
 - CORBA 呼叫映射為 Integration Adapter（out port）
 - DB 操作映射為 Repository（out port）
+- **Request / Response 欄位一律用表格呈現**（參見 `references/java-ca-spec.md` 的表格格式）
+- 全文使用**繁體中文**撰寫說明文字
 
 ---
 

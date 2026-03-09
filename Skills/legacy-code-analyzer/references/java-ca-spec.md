@@ -76,17 +76,18 @@ Method：{controllerMethodName}()
 對應 VB6：{frm 檔}.{按鈕名稱}_Click（或 Form_Load）
 
 ### Request
-Content-Type: application/json
-{
-  "{field1}": "{type} // {說明}",
-  "{field2}": "{type} // {說明}"
-}
+
+| 欄位名稱 | 型別 | 必填 | 說明 |
+|---------|------|------|------|
+| `{field1}` | `{type}` | ✅ | {說明} |
+| `{field2}` | `{type}` | ❌ | {說明} |
 
 ### Response
-{
-  "{field1}": "{type} // {說明}",
-  "{field2}": "{type} // {說明}"
-}
+
+| 欄位名稱 | 型別 | 說明 |
+|---------|------|------|
+| `{field1}` | `{type}` | {說明} |
+| `{field2}` | `{type}` | {說明} |
 
 ### HTTP Status
 - 200 OK：成功
@@ -114,18 +115,22 @@ public interface {Verb}{Noun}UseCase {
 }
 
 ### Input（Command / Query）
-{module}/usecase/ports/in/{feature}/{Verb}{Noun}Command.java
-public record {Verb}{Noun}Command(
-    {Type} {field1},   // {說明}
-    {Type} {field2}    // {說明}
-) {}
+
+路徑：`{module}/usecase/ports/in/{feature}/{Verb}{Noun}Command.java`
+
+| 欄位名稱 | 型別 | 必填 | 說明 |
+|---------|------|------|------|
+| `{field1}` | `{Type}` | ✅ | {說明} |
+| `{field2}` | `{Type}` | ❌ | {說明} |
 
 ### Output（Response）
-{module}/usecase/ports/in/{feature}/{Verb}{Noun}Response.java
-public record {Verb}{Noun}Response(
-    {Type} {field1},   // {說明}
-    {Type} {field2}    // {說明}
-) {}
+
+路徑：`{module}/usecase/ports/in/{feature}/{Verb}{Noun}Response.java`
+
+| 欄位名稱 | 型別 | 說明 |
+|---------|------|------|
+| `{field1}` | `{Type}` | {說明} |
+| `{field2}` | `{Type}` | {說明} |
 
 ### 業務流程（對應 VB6 call chain）
 1. 驗證 input（對應：{VB6 驗證邏輯}）
