@@ -141,6 +141,30 @@ ASCII 佈局規則：
 
 ---
 
+### Step 7 — 合併產出 HTML 報告
+
+將 `05-ui-and-form-behavior.md` 與 `06-java-ca-api-spec.md` 合併，產出單一 HTML 檔案，方便上傳至公司 KB 系統。
+
+執行轉換腳本：
+
+```bash
+python3 Skills/legacy-code-analyzer/scripts/md_to_html.py \
+  ".legacy-code-analyzer/{frm-name}/05-ui-and-form-behavior.md" \
+  ".legacy-code-analyzer/{frm-name}/06-java-ca-api-spec.md" \
+  --output ".legacy-code-analyzer/{frm-name}/{frm-name}-report.html" \
+  --title "{frm-name} 功能分析報告"
+```
+
+若腳本不存在，手動用 Python 建立後再執行（腳本路徑：`Skills/legacy-code-analyzer/scripts/md_to_html.py`）。
+
+產出的 HTML：
+- 包含完整的 CSS 樣式（字體、表格、code block），可直接在瀏覽器開啟確認效果
+- 目錄（TOC）自動從各 `##` 標題產生，方便 KB 內導覽
+- 以 `<section>` 分隔兩個報告區塊，標題明確標示「Form 分析」與「Java CA API 規格」
+- 使用 UTF-8 編碼，支援中文
+
+---
+
 ## Workflow（模式 B：子專案全盤）
 
 1. Confirm the exact scope.
@@ -252,4 +276,5 @@ POSEIDON OMI 系統特有的框架函式，負責 UI 初始化、語系管理、
 - 已識別並白話說明 CORBA 呼叫（Tx* / TSMC_tx*）。
 - 已整理資料表與外部依賴。
 - 已產出 Java CA API 規格（Controller / Use Case / Domain / Repository / Adapter）。
+- 已產出合併 HTML 報告（`.legacy-code-analyzer/{frm-name}/{frm-name}-report.html`）。
 - 已標出不確定處與後續建議。
