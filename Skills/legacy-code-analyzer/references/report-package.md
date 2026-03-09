@@ -52,27 +52,60 @@
 
 ### `05-ui-and-form-behavior.md`
 
+必含內容（以 SA 角度、白話撰寫，讓不懂舊程式的同事也能看懂）：
+- 這個 Form 的用途（一句話說清楚）。
+- 使用者操作流程（步驟描述，不是程式碼）。
+- 每個按鈕/動作背後在做什麼（白話語意，非函式名稱）。
+- DB 操作：查哪些表、取什麼資料、更新什麼欄位。
+- CORBA 呼叫（`Tx*` / `TSMC_tx*`）：白話說明業務意義（例如「查詢製程狀態」、「觸發機台移送」）。
+- 畫面狀態與全域狀態的耦合風險。
+- 哪些邏輯有風險（無驗證、直接刪除、共用全域物件等）。
+
+### `05b-form-ascii-layout.txt`
+
+僅模式 A（單一 Form 分析）需要。
+
+格式範例：
+```
++--[ 客戶查詢 ]-------------------------------------------+
+| 客戶編號:  [txtCustNo____________________]  [查詢]      |
+| 客戶姓名:  [txtCustName_________________]               |
+| 地址:      [txtAddress__________________]               |
+|                                                          |
+| [GridView: 訂單清單]                                    |
+| | 訂單編號 | 日期       | 金額   | 狀態  |             |
+| |----------|------------|--------|-------|             |
+|                                                          |
+| [確認]  [取消]  [列印]                                   |
++---------------------------------------------------------+
+```
+
+規則：
+- 按控制項的 `Top`/`Left` 座標由上到下、由左到右排列。
+- 使用控制項的 `Caption`（按鈕、Label）或 `Name`（TextBox、ComboBox）標示。
+- DataGrid / ListView 用框線加欄位名稱表示。
+- 不需要精確像素，重點是讓人一眼看懂表單布局與操作動線。
+
+### `06-java-ca-api-spec.md`
+
+依照 [references/java-ca-spec.md](java-ca-spec.md) 的模板，為 Form 的業務邏輯產出完整的 Java Clean Architecture API 規格：
+
 必含內容：
-- 每個 form 或主要畫面的用途。
-- 控制項與事件對應到哪些處理函式。
-- 畫面狀態與全域狀態的耦合。
-- 使用者操作流程與背後資料處理。
+- 模組名稱與業務邊界說明。
+- 每個業務動作對應的 API Endpoint（HTTP method、path、summary）。
+- 每個 endpoint 對應的 Use Case（介面名稱、方法簽名、input command/query、output response）。
+- Domain Entity 定義（欄位、業務規則）。
+- Repository 介面（out port，僅列方法簽名，不含 SQL）。
+- CORBA / 外部系統呼叫對應的 Integration Adapter 介面（out port）。
+- 各層對應的 package 路徑（依團隊慣例）。
 
-### `06-spring-migration-candidates.md`
-
-必含內容：
-- 建議拆出的 Controller / endpoint candidates。
-- 建議拆出的 Application Service、Domain Service、Repository、Batch、Integration Adapter。
-- 每個候選元件對應哪些 legacy functions。
-- 哪些邏輯不適合直接搬，需要先解耦或補測試。
-
-Spring mapping lens:
-- UI event handler 或表單命令通常是 Controller 或 command endpoint 的候選入口。
-- 跨多個 repository 的流程協調通常是 Application Service。
-- 純計算、驗證、資格判斷通常是 Domain Service 或 policy object。
-- SQL helper、資料表 CRUD、外部查詢通常是 Repository 或 Gateway。
-- Timer、批次啟動、固定週期工作通常是 Scheduler / Batch job。
-- COM、ActiveX、檔案交換、外部系統呼叫通常是 Integration Adapter。
+Spring CA mapping lens（Ports & Adapters）：
+- UI event handler / 表單命令 → `adapter/in/controller/` Controller endpoint
+- 跨多 repository 流程協調 → `usecase/impl/` Use Case（實作 `usecase/ports/in/` 介面）
+- 純計算、驗證、資格判斷 → `domain/` Domain Service 或 policy object
+- SQL / JPA 資料存取 → `adapter/out/jdbc/` 或 `adapter/out/jpa/`（實作 `usecase/ports/out/` 介面）
+- CORBA 呼叫（`Tx*` / `TSMC_tx*`）→ `adapter/out/corba/` Integration Adapter（實作 `usecase/ports/out/` 介面）
+- 批次、Timer → Scheduler / Batch job
 
 ### `07-open-questions.md`
 
