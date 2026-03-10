@@ -48,6 +48,12 @@ def get_client():
     org     = os.environ.get("ADO_ORG")     or file_config.get("ADO_ORG", "")
     project = os.environ.get("ADO_PROJECT") or file_config.get("ADO_PROJECT", "")
 
+    # Proxy: env var takes priority over config file
+    proxy = (
+        os.environ.get("HTTP_PROXY") or os.environ.get("HTTPS_PROXY")
+        or file_config.get("HTTP_PROXY") or file_config.get("HTTPS_PROXY")
+    )
+
     errors = []
     if not pat:
         errors.append("ADO_PAT")
@@ -61,16 +67,17 @@ def get_client():
             "hint": "Run: python <SKILL_DIR>/scripts/setup.py status",
         }))
         sys.exit(1)
-    return ADOClient(pat, org, project)
+    return ADOClient(pat, org, project, proxy=proxy)
 
 
 class ADOClient:
-    def __init__(self, pat, org, project):
+    def __init__(self, pat, org, project, proxy=None):
         self.org = org
         self.project = project
         self.project_encoded = urllib.parse.quote(project, safe="")
         self.base_url = f"https://dev.azure.com/{org}"
         self._token = base64.b64encode(f":{pat}".encode()).decode()
+        self._proxy = proxy
         self._opener = self._build_opener()
 
     def _build_opener(self):
@@ -79,9 +86,8 @@ class ADOClient:
         ssl_ctx.verify_mode = ssl.CERT_NONE
 
         handlers = [urllib.request.HTTPSHandler(context=ssl_ctx)]
-        proxy = os.environ.get("HTTP_PROXY") or os.environ.get("HTTPS_PROXY")
-        if proxy:
-            handlers.insert(0, urllib.request.ProxyHandler({"http": proxy, "https": proxy}))
+        if self._proxy:
+            handlers.insert(0, urllib.request.ProxyHandler({"http": self._proxy, "https": self._proxy}))
         return urllib.request.build_opener(*handlers)
 
     def request(self, url, method="GET", data=None, content_type="application/json"):
