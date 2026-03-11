@@ -20,6 +20,7 @@ Credentials priority (highest to lowest):
 import argparse
 import json
 import os
+import platform
 import stat
 import sys
 
@@ -56,13 +57,25 @@ def cmd_status(args):
     project, project_src = get_val("ADO_PROJECT")
     pat, pat_src = get_val("ADO_PAT")
 
-    # Proxy: check HTTP_PROXY and HTTPS_PROXY (env takes priority over file)
-    http_proxy, http_proxy_src = get_val("HTTP_PROXY")
-    https_proxy, https_proxy_src = get_val("HTTPS_PROXY")
+    # Proxy: check HTTP_PROXY and HTTPS_PROXY (env takes priority over file).
+    # Also check lowercase variants — Linux often exports http_proxy (lowercase).
+    def get_proxy_val(key):
+        env_val = os.environ.get(key, "") or os.environ.get(key.lower(), "")
+        file_val = file_config.get(key, "")
+        if env_val:
+            return env_val, "env"
+        elif file_val:
+            return file_val, "file"
+        return "", "missing"
+
+    http_proxy, http_proxy_src = get_proxy_val("HTTP_PROXY")
+    https_proxy, https_proxy_src = get_proxy_val("HTTPS_PROXY")
     effective_proxy = http_proxy or https_proxy
     effective_proxy_src = http_proxy_src if http_proxy else https_proxy_src
 
     print(json.dumps({
+        "platform": platform.system(),   # Windows / Linux / Darwin
+        "python": sys.version.split()[0],
         "config_file": CONFIG_FILE,
         "config_file_exists": os.path.exists(CONFIG_FILE),
         "defaults": {
@@ -105,7 +118,8 @@ def cmd_save(args):
         for k, v in file_config.items():
             f.write(f"{k}={v}\n")
 
-    # Restrict to owner read/write only (like SSH keys)
+    # Restrict to owner read/write only (like SSH keys).
+    # os.chmod with Unix-style modes is a no-op on Windows; the try/except silences that.
     try:
         os.chmod(CONFIG_FILE, stat.S_IRUSR | stat.S_IWUSR)
     except Exception:
