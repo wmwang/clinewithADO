@@ -20,17 +20,48 @@ description: |
 
 ## 初次設定（首次使用必讀）
 
+### 0. 偵測作業系統與 Python 指令
+
+**在執行任何指令前，先偵測使用者的作業系統**，以決定後續指令的語法：
+
+```bash
+python -c "import platform, sys; print(platform.system(), sys.version)"
+# 或
+python3 -c "import platform, sys; print(platform.system(), sys.version)"
+```
+
+根據輸出決定後續使用的 Python 指令與路徑分隔符：
+
+| 作業系統輸出 | Python 指令 | 路徑分隔符 | 路徑引號 |
+|---|---|---|---|
+| `Windows` | `python` | `\` | `"..."` (CMD) 或 `"..."` (PowerShell) |
+| `Linux` / `Darwin` | `python3` | `/` | `"..."` |
+
+> **Windows 注意**：若 `python` 無法執行，嘗試 `py -3`。腳本路徑中的 `/` 請改為 `\`。
+
+以下文件範例均使用 Unix 語法（`python3` + `/`）。Windows 執行時請自行替換。
+
+---
+
 **每次執行任何指令前，先呼叫 `setup.py status` 確認設定狀態：**
 
 ```bash
-python "$SCRIPT_DIR/setup.py" status
+python3 "$SCRIPT_DIR/setup.py" status
 ```
 
 根據回傳的 `ready` 欄位決定下一步：
 
 ### 情況一：`"ready": true`
 
-設定完整，直接執行使用者要求的操作，無需任何額外提示。
+設定完整，檢查 `proxy` 欄位：
+
+- 若 `proxy.effective` 為 `null` 且使用者所在環境需要 Proxy，詢問：
+  > 「您目前沒有設定 HTTP Proxy。若公司環境需要透過 Proxy 連線，請提供 Proxy 網址（例如 `http://proxy.corp:8080`），否則直接略過。」
+- 若使用者提供 Proxy，執行：
+  ```bash
+  python3 "$SCRIPT_DIR/setup.py" save --proxy "http://proxy.corp:8080"
+  ```
+- 確認完 Proxy 後，直接執行使用者要求的操作，無需其他提示。
 
 ### 情況二：`"ready": false`（有缺少的憑證）
 
@@ -48,51 +79,83 @@ python "$SCRIPT_DIR/setup.py" status
 若未設定，詢問使用者：
 > 「請提供您的 Azure DevOps Personal Access Token（PAT）。PAT 需要 **Work Items (Read & Write)** 與 **Code (Read)** 權限。」
 
-取得所有值後，執行儲存：
+#### HTTP Proxy（企業網路必填）
+詢問使用者：
+> 「您的環境是否需要透過 HTTP Proxy 連線？若有請提供網址（例如 `http://proxy.corp:8080`），否則直接略過。」
+
+取得所有值後，執行儲存（無 Proxy 則省略 `--proxy` 參數）：
 
 ```bash
-python "$SCRIPT_DIR/setup.py" save \
+python3 "$SCRIPT_DIR/setup.py" save \
   --org "使用者提供的組織名稱" \
   --project "使用者提供的專案名稱" \
-  --pat "使用者提供的 PAT"
+  --pat "使用者提供的 PAT" \
+  --proxy "使用者提供的 Proxy URL（若有）"
 ```
 
-設定會儲存到 `~/.ado-devops.env`（僅擁有者可讀），**之後不需重複設定**，所有腳本都會自動載入。
+設定會儲存到 `~/.ado-devops.env`（Windows 為 `%USERPROFILE%\.ado-devops.env`），**之後不需重複設定**，所有腳本都會自動載入。
 
-> **優先順序**：Shell 環境變數 > `~/.ado-devops.env` 設定檔。若系統已有環境變數，設定檔中同名的值不會覆蓋它。
+> **Proxy 讀取優先順序**：環境變數（`HTTP_PROXY`、`http_proxy`、`HTTPS_PROXY`、`https_proxy`）> `~/.ado-devops.env`。腳本同時支援大小寫，Linux/macOS 上的 `http_proxy`（小寫）亦可正確讀取。
 
 ---
 
 ## 腳本路徑
 
-此 skill 的腳本位於 **SKILL.md 同層的 `scripts/` 子目錄**。執行前，先取得 SKILL.md 的絕對路徑，再組出腳本的完整路徑：
+此 skill 的腳本位於 **SKILL.md 同層的 `scripts/` 子目錄**。執行前，先取得 SKILL.md 的絕對路徑，再組出腳本的完整路徑。
+
+### Unix / macOS
 
 ```bash
-# SKILL_DIR 為此 SKILL.md 所在的目錄（project 或 global 皆適用）
 SCRIPT_DIR="<SKILL.md 所在目錄>/scripts"
 
-python "$SCRIPT_DIR/work_items.py" get 123
-python "$SCRIPT_DIR/repos.py" list
-python "$SCRIPT_DIR/core.py" whoami
-python "$SCRIPT_DIR/search.py" code "keyword"
+python3 "$SCRIPT_DIR/work_items.py" get 123
+python3 "$SCRIPT_DIR/repos.py" list
+python3 "$SCRIPT_DIR/core.py" whoami
+python3 "$SCRIPT_DIR/search.py" code "keyword"
 ```
 
-以下文件中的腳本路徑均以 `$SCRIPT_DIR` 代稱。Claude 執行時應自動解析 SKILL.md 的實際位置（無論是專案層級的 `.cline/skills/` 或全域的 `~/.cline/skills/`），不要寫死路徑。
+### Windows（PowerShell）
+
+```powershell
+$SCRIPT_DIR = "<SKILL.md 所在目錄>\scripts"
+
+python "$SCRIPT_DIR\work_items.py" get 123
+python "$SCRIPT_DIR\repos.py" list
+python "$SCRIPT_DIR\core.py" whoami
+python "$SCRIPT_DIR\search.py" code "keyword"
+```
+
+> Windows CMD 使用 `%SCRIPT_DIR%\work_items.py`，PowerShell 使用 `$SCRIPT_DIR\work_items.py`。
+
+以下文件中的腳本路徑均以 `$SCRIPT_DIR` 代稱。Claude 執行時應自動解析 SKILL.md 的實際位置（無論是專案層級的 `.cline/skills/` 或全域的 `~/.cline/skills/`），並根據作業系統選擇正確語法，不要寫死路徑。
 
 ## 前置條件
 
-以下環境變數必須已設定：
+憑證優先透過 `~/.ado-devops.env` 設定檔管理（由 `setup.py save` 寫入），也可使用環境變數覆蓋。
+
+**環境變數方式（選擇性）：**
 
 ```bash
-export ADO_PAT="your_personal_access_token"    # 必填，需有 Work Items + Code 讀寫權限
-export ADO_ORG="your-organization"             # 必填，ADO 組織名稱
-export ADO_PROJECT="your-project"              # 必填，專案名稱
-export HTTP_PROXY="http://proxy.corp:8080"     # 選填，企業 proxy 環境
+# Unix/macOS
+export ADO_PAT="your_personal_access_token"    # 必填
+export ADO_ORG="your-organization"             # 必填
+export ADO_PROJECT="your-project"              # 必填
+export HTTP_PROXY="http://proxy.corp:8080"     # 選填，企業 proxy（大小寫均支援）
 ```
 
-> 腳本自動 bypass SSL 驗證（`verify=False`），支援自簽憑證與企業 proxy 環境。
+```powershell
+# Windows PowerShell
+$env:ADO_PAT = "your_personal_access_token"
+$env:ADO_ORG = "your-organization"
+$env:ADO_PROJECT = "your-project"
+$env:HTTP_PROXY = "http://proxy.corp:8080"
+```
 
-若環境變數未設定，腳本會輸出含 `"error"` 欄位的 JSON 並退出，請告知使用者設定對應變數。
+> **建議做法**：使用 `setup.py save` 將設定寫入 `~/.ado-devops.env`，跨 session 永久生效，不受 shell 重啟影響。
+
+> 腳本自動 bypass SSL 驗證（`verify=False`），支援自簽憑證與企業 proxy 環境。Proxy 同時讀取 `HTTP_PROXY`、`http_proxy`、`HTTPS_PROXY`、`https_proxy`（大小寫皆支援）。
+
+若憑證未設定，腳本會輸出含 `"error"` 欄位的 JSON 並退出。請引導使用者執行 `setup.py save` 完成設定，而非直接要求設定環境變數。
 
 ---
 
@@ -496,8 +559,11 @@ python "$SCRIPT_DIR/core.py" sprints --team "Backend Team" --current
 
 | 錯誤訊息 | 原因 | 處理方式 |
 |---------|------|---------|
-| `Missing environment variables` | 環境變數未設定 | 請使用者 `export ADO_PAT/ADO_ORG/ADO_PROJECT` |
+| `Missing credentials` | 憑證未設定 | 執行 `setup.py save --org ... --project ... --pat ...` |
 | `HTTP 401` | PAT 失效或過期 | 請使用者重新產生 PAT |
 | `HTTP 403` | PAT 權限不足 | 確認 PAT 包含 Work Items (Read/Write) 及 Code (Read) |
 | `HTTP 404` | 工單 ID 或 repo 不存在 | 確認 ID 與 ADO_PROJECT 是否正確 |
 | `HTTP 400` on update | 欄位值不合法（如狀態值拼字錯誤） | 先 `get` 確認目前欄位值，再調整 |
+| 連線逾時 / `ProxyError` | 企業 Proxy 未設定 | 執行 `setup.py save --proxy http://proxy.corp:8080` |
+| `SSL` / `certificate verify failed` | 企業自簽憑證 | 腳本已預設 bypass SSL，若仍失敗請確認 Proxy 設定正確 |
+| `python3: command not found` | Windows 無 `python3` | 改用 `python` 或 `py -3` |

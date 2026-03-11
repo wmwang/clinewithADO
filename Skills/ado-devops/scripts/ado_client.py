@@ -48,9 +48,11 @@ def get_client():
     org     = os.environ.get("ADO_ORG")     or file_config.get("ADO_ORG", "")
     project = os.environ.get("ADO_PROJECT") or file_config.get("ADO_PROJECT", "")
 
-    # Proxy: env var takes priority over config file
+    # Proxy: env var takes priority over config file.
+    # Check both uppercase and lowercase variants — Linux often exports http_proxy (lowercase).
     proxy = (
-        os.environ.get("HTTP_PROXY") or os.environ.get("HTTPS_PROXY")
+        os.environ.get("HTTP_PROXY") or os.environ.get("http_proxy")
+        or os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy")
         or file_config.get("HTTP_PROXY") or file_config.get("HTTPS_PROXY")
     )
 
