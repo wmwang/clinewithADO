@@ -1,7 +1,7 @@
 ---
 name: ado-devops
 description: |
-  通用 Azure DevOps 操作技能。當使用者提到查工單、看 PR、更新狀態、搜尋 Branch、查看 Commit、修改工作項目、列出 Repository 等 ADO 相關操作時，立即使用此技能。
+  通用 Azure DevOps 操作技能。當使用者提到查工單、看 PR、更新狀態、搜尋 Branch、查看 Commit、修改工作項目、列出 Repository、讀寫 Wiki 頁面等 ADO 相關操作時，立即使用此技能。
   觸發情境包含（但不限於）：
   - 「幫我查工單 #123」、「看一下這個 task」、「有哪些 To Do 的 bug」
   - 「更新工單狀態到 Active」、「把這個 assign 給 xxx」
@@ -11,7 +11,8 @@ description: |
   - 「我們有哪些 project」、「這個 team 有哪些人」、「現在的 sprint 是什麼時候」
   - 「誰的 PAT 是這個」、「確認一下 ADO 連線」
   - 「搜尋 ADO 裡有沒有用到 xxx」、「在 repo 裡找 ConnectionString」、「wiki 上有沒有部署文件」
-  即使使用者沒有明說 Azure DevOps，只要情境涉及工單管理、程式碼儲存庫或專案/團隊查詢，也應觸發此技能。
+  - 「列出 wiki 頁面」、「讀取 wiki 的部署說明」、「新增 wiki 頁面」、「更新 wiki 內容」、「刪除 wiki 頁面」
+  即使使用者沒有明說 Azure DevOps，只要情境涉及工單管理、程式碼儲存庫、Wiki 文件或專案/團隊查詢，也應觸發此技能。
 ---
 
 # Azure DevOps 通用操作技能
@@ -77,7 +78,7 @@ python3 "$SCRIPT_DIR/setup.py" status
 
 #### ADO_PAT（Personal Access Token）
 若未設定，詢問使用者：
-> 「請提供您的 Azure DevOps Personal Access Token（PAT）。PAT 需要 **Work Items (Read & Write)** 與 **Code (Read)** 權限。」
+> 「請提供您的 Azure DevOps Personal Access Token（PAT）。PAT 需要 **Work Items (Read & Write)**、**Code (Read)** 與 **Wiki (Read & Write)** 權限。」
 
 #### HTTP Proxy（企業網路必填）
 詢問使用者：
@@ -112,6 +113,7 @@ python3 "$SCRIPT_DIR/work_items.py" get 123
 python3 "$SCRIPT_DIR/repos.py" list
 python3 "$SCRIPT_DIR/core.py" whoami
 python3 "$SCRIPT_DIR/search.py" code "keyword"
+python3 "$SCRIPT_DIR/wiki.py" list
 ```
 
 ### Windows（PowerShell）
@@ -123,6 +125,7 @@ python "$SCRIPT_DIR\work_items.py" get 123
 python "$SCRIPT_DIR\repos.py" list
 python "$SCRIPT_DIR\core.py" whoami
 python "$SCRIPT_DIR\search.py" code "keyword"
+python "$SCRIPT_DIR\wiki.py" list
 ```
 
 > Windows CMD 使用 `%SCRIPT_DIR%\work_items.py`，PowerShell 使用 `$SCRIPT_DIR\work_items.py`。
@@ -434,6 +437,79 @@ python "$SCRIPT_DIR/repos.py" commits <repo> --branch main --top 50
 
 ---
 
+## Wiki 操作
+
+
+> Wiki 識別符（`<wiki>`）使用 wiki 名稱（例如 `MyProject.wiki`）或 GUID，先執行 `list` 取得正確名稱。
+> 頁面路徑（`<page-path>`）以 `/` 開頭，例如 `/Architecture/Overview`。
+
+### 列出所有 Wiki
+
+```bash
+python3 "$SCRIPT_DIR/wiki.py" list
+```
+
+輸出每個 wiki 的 `name`（識別符）、`type`（`projectWiki` 或 `codeWiki`）、`url`。
+
+### 瀏覽 Wiki 頁面目錄
+
+```bash
+# 根目錄（一層）
+python3 "$SCRIPT_DIR/wiki.py" pages MyProject.wiki
+
+# 指定子目錄
+python3 "$SCRIPT_DIR/wiki.py" pages MyProject.wiki --path "/Architecture"
+
+# 遞迴列出所有頁面
+python3 "$SCRIPT_DIR/wiki.py" pages MyProject.wiki --recursive
+```
+
+### 讀取 Wiki 頁面內容
+
+```bash
+python3 "$SCRIPT_DIR/wiki.py" get MyProject.wiki "/Architecture/Overview"
+```
+
+輸出包含 `path`、`id` 及 `content`（Markdown 原文）。
+
+### 建立 Wiki 頁面
+
+```bash
+# 直接提供內容
+python3 "$SCRIPT_DIR/wiki.py" create MyProject.wiki "/Architecture/NewPage" \
+  --content "# 標題\n\n說明文字..."
+
+# 從檔案讀取內容
+python3 "$SCRIPT_DIR/wiki.py" create MyProject.wiki "/Architecture/NewPage" \
+  --content-file ./page_content.md
+```
+
+> 若頁面已存在會回傳 `HTTP 409` 衝突錯誤，請改用 `update`。
+
+### 更新 Wiki 頁面
+
+```bash
+# 直接提供新內容（完整覆寫）
+python3 "$SCRIPT_DIR/wiki.py" update MyProject.wiki "/Architecture/Overview" \
+  --content "# 更新後的標題\n\n新的說明..."
+
+# 從檔案讀取新內容
+python3 "$SCRIPT_DIR/wiki.py" update MyProject.wiki "/Architecture/Overview" \
+  --content-file ./updated_content.md
+```
+
+> `update` 使用 `If-Match: *` 強制覆寫，不需要先取得 ETag。
+
+### 刪除 Wiki 頁面
+
+```bash
+python3 "$SCRIPT_DIR/wiki.py" delete MyProject.wiki "/Architecture/OldPage"
+```
+
+> 刪除**不可還原**，執行前請向使用者確認。
+
+---
+
 ## 全文搜尋（Search）
 
 
@@ -561,7 +637,7 @@ python "$SCRIPT_DIR/core.py" sprints --team "Backend Team" --current
 |---------|------|---------|
 | `Missing credentials` | 憑證未設定 | 執行 `setup.py save --org ... --project ... --pat ...` |
 | `HTTP 401` | PAT 失效或過期 | 請使用者重新產生 PAT |
-| `HTTP 403` | PAT 權限不足 | 確認 PAT 包含 Work Items (Read/Write) 及 Code (Read) |
+| `HTTP 403` | PAT 權限不足 | 確認 PAT 包含 Work Items (Read/Write)、Code (Read)、Wiki (Read/Write) |
 | `HTTP 404` | 工單 ID 或 repo 不存在 | 確認 ID 與 ADO_PROJECT 是否正確 |
 | `HTTP 400` on update | 欄位值不合法（如狀態值拼字錯誤） | 先 `get` 確認目前欄位值，再調整 |
 | 連線逾時 / `ProxyError` | 企業 Proxy 未設定 | 執行 `setup.py save --proxy http://proxy.corp:8080` |

@@ -92,17 +92,21 @@ class ADOClient:
             handlers.insert(0, urllib.request.ProxyHandler({"http": self._proxy, "https": self._proxy}))
         return urllib.request.build_opener(*handlers)
 
-    def request(self, url, method="GET", data=None, content_type="application/json"):
+    def request(self, url, method="GET", data=None, content_type="application/json",
+                extra_headers=None):
         headers = {
             "Authorization": f"Basic {self._token}",
             "Content-Type": content_type,
             "Accept": "application/json",
         }
+        if extra_headers:
+            headers.update(extra_headers)
         req_data = json.dumps(data).encode() if data is not None else None
         req = urllib.request.Request(url, data=req_data, headers=headers, method=method)
         try:
             with self._opener.open(req) as resp:
-                return json.loads(resp.read().decode())
+                body = resp.read().decode()
+                return json.loads(body) if body.strip() else {}
         except urllib.error.HTTPError as e:
             body = e.read().decode()
             raise RuntimeError(f"HTTP {e.code} {method} {url}: {body}")
@@ -409,3 +413,65 @@ class ADOClient:
         body = {"searchText": text, "$skip": skip, "$top": top,
                 "includeFacets": False, "filters": filters}
         return self.request(self._search_url("wikisearchresults"), "POST", body)
+
+    # ── Wiki ─────────────────────────────────────────────────────────────────
+
+    def list_wikis(self):
+        url = f"{self.base_url}/{self.project_encoded}/_apis/wiki/wikis?api-version=7.1"
+        return self.request(url)
+
+    def get_wiki(self, wiki_identifier):
+        wiki_enc = urllib.parse.quote(wiki_identifier, safe="")
+        url = f"{self.base_url}/{self.project_encoded}/_apis/wiki/wikis/{wiki_enc}?api-version=7.1"
+        return self.request(url)
+
+    def get_wiki_pages(self, wiki_identifier, path="/", recursive=False, include_content=False):
+        """List wiki pages. Use recursive=True for full tree."""
+        wiki_enc = urllib.parse.quote(wiki_identifier, safe="")
+        recursion = "full" if recursive else "oneLevel"
+        safe_path = urllib.parse.quote(path or "/", safe="/")
+        params = f"path={safe_path}&recursionLevel={recursion}&api-version=7.1"
+        if include_content:
+            params += "&includeContent=true"
+        url = f"{self.base_url}/{self.project_encoded}/_apis/wiki/wikis/{wiki_enc}/pages?{params}"
+        return self.request(url)
+
+    def get_wiki_page(self, wiki_identifier, path, include_content=True):
+        """Get a single wiki page, optionally with its Markdown content."""
+        wiki_enc = urllib.parse.quote(wiki_identifier, safe="")
+        safe_path = urllib.parse.quote(path, safe="/")
+        params = f"path={safe_path}&api-version=7.1"
+        if include_content:
+            params += "&includeContent=true"
+        url = f"{self.base_url}/{self.project_encoded}/_apis/wiki/wikis/{wiki_enc}/pages?{params}"
+        return self.request(url)
+
+    def create_wiki_page(self, wiki_identifier, path, content):
+        """Create a new wiki page (PUT without If-Match → creates new)."""
+        wiki_enc = urllib.parse.quote(wiki_identifier, safe="")
+        safe_path = urllib.parse.quote(path, safe="/")
+        url = (
+            f"{self.base_url}/{self.project_encoded}/_apis/wiki/wikis/{wiki_enc}"
+            f"/pages?path={safe_path}&api-version=7.1"
+        )
+        return self.request(url, "PUT", {"content": content})
+
+    def update_wiki_page(self, wiki_identifier, path, content):
+        """Update an existing wiki page (If-Match: * to force overwrite)."""
+        wiki_enc = urllib.parse.quote(wiki_identifier, safe="")
+        safe_path = urllib.parse.quote(path, safe="/")
+        url = (
+            f"{self.base_url}/{self.project_encoded}/_apis/wiki/wikis/{wiki_enc}"
+            f"/pages?path={safe_path}&api-version=7.1"
+        )
+        return self.request(url, "PUT", {"content": content}, extra_headers={"If-Match": "*"})
+
+    def delete_wiki_page(self, wiki_identifier, path):
+        """Delete a wiki page."""
+        wiki_enc = urllib.parse.quote(wiki_identifier, safe="")
+        safe_path = urllib.parse.quote(path, safe="/")
+        url = (
+            f"{self.base_url}/{self.project_encoded}/_apis/wiki/wikis/{wiki_enc}"
+            f"/pages?path={safe_path}&api-version=7.1"
+        )
+        return self.request(url, "DELETE")
