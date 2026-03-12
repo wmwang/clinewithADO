@@ -1,0 +1,23 @@
+{
+  "skill_name": "tech-article-writer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "幫我寫一篇關於公司導入 Claude 作為日常 AI 助手的指南，同時產出 md 和 html 兩種格式，存到 outputs 資料夾",
+      "expected_output": "一篇 1000-2000 字的繁體中文技術導入指南，包含表格，語調真實自然，同時有 .md 和 .html 檔案",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "寫一篇教同事用 ChatGPT 整理會議記錄的教學文章，產出 md 和 html 格式，存到 outputs 資料夾",
+      "expected_output": "一篇 1000-2000 字的繁體中文 AI 工具教學文章，包含具體步驟和表格，語調親切，同時有 .md 和 .html 檔案",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "幫我寫一篇科普文章解釋什麼是 RAG（Retrieval-Augmented Generation），讓不懂 AI 的同事也能看懂，為什麼我們的 AI 專案需要它，產出 md 和 html 格式，存到 outputs 資料夾",
+      "expected_output": "一篇 1000-2000 字的繁體中文科技科普文章，包含表格，專業術語有解釋，同時有 .md 和 .html 檔案",
+      "files": []
+    }
+  ]
+}
