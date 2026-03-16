@@ -1,0 +1,30 @@
+{
+  "expectations": [
+    {
+      "text": "manual.md file is created in the outputs directory",
+      "passed": true,
+      "evidence": "manual.md found in outputs/"
+    },
+    {
+      "text": "Output contains a flowchart or workflow diagram even though the skill has no scripts",
+      "passed": true,
+      "evidence": "Found 882 matches for pattern '[▼→┌─┐│└┘]'"
+    },
+    {
+      "text": "Output includes trigger phrases or keyword examples for when the skill activates",
+      "passed": true,
+      "evidence": "Found: ['trigger', '寫一篇']"
+    },
+    {
+      "text": "Output does NOT reference scripts/ directory (this skill has no scripts)",
+      "passed": true,
+      "evidence": "Pattern 'scripts/' correctly absent"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  }
+}

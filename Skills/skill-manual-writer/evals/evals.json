@@ -1,0 +1,113 @@
+{
+  "skill_name": "skill-manual-writer",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "幫 Skills/ado-devops 這個 skill 寫一份 manual.md",
+      "expected_output": "A comprehensive manual.md containing ASCII architecture diagram, execution flowchart, component table listing all 7 scripts with their commands, real CLI examples, developer guide, and error reference table.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "manual_md_exists",
+          "description": "manual.md file is created in the outputs directory",
+          "type": "file_exists",
+          "target": "manual.md"
+        },
+        {
+          "name": "has_ascii_box_diagram",
+          "description": "Output contains ASCII box-drawing characters used for architecture or flow diagrams (┌ ─ ┐ │ └ ┘ ├ ┤ ┬ ┴)",
+          "type": "content_contains",
+          "pattern": "[┌─┐│└┘├┤┬┴]"
+        },
+        {
+          "name": "all_7_scripts_mentioned",
+          "description": "All 7 ado-devops scripts are referenced: work_items, repos, core, search, setup, ado_client, wiki",
+          "type": "content_contains_all",
+          "patterns": ["work_items", "repos.py", "core.py", "search.py", "setup.py", "ado_client", "wiki.py"]
+        },
+        {
+          "name": "has_flow_arrows",
+          "description": "Output contains flow direction symbols (▼ → ─→) indicating a flowchart is present",
+          "type": "content_contains",
+          "pattern": "[▼→]"
+        },
+        {
+          "name": "has_cli_examples",
+          "description": "Output contains real CLI command examples referencing python and scripts/",
+          "type": "content_contains",
+          "pattern": "python.*scripts"
+        },
+        {
+          "name": "has_error_section",
+          "description": "Output contains an error handling or troubleshooting section",
+          "type": "content_contains_any",
+          "patterns": ["錯誤", "Error", "error", "troubleshoot", "問題"]
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "為 Skills/tech-article-writer 這個 skill 生成技術說明文件",
+      "expected_output": "A manual.md that has a workflow diagram despite having no scripts, lists trigger keywords, describes the writing workflow steps (overview, structure, table, length, template), and does NOT reference a non-existent scripts/ directory.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "manual_md_exists",
+          "description": "manual.md file is created in the outputs directory",
+          "type": "file_exists",
+          "target": "manual.md"
+        },
+        {
+          "name": "has_flow_diagram",
+          "description": "Output contains a flowchart or workflow diagram even though the skill has no scripts",
+          "type": "content_contains",
+          "pattern": "[▼→┌─┐│└┘]"
+        },
+        {
+          "name": "has_trigger_examples",
+          "description": "Output includes trigger phrases or keyword examples for when the skill activates",
+          "type": "content_contains_any",
+          "patterns": ["觸發", "trigger", "寫一篇", "科技文章", "AI 教學"]
+        },
+        {
+          "name": "no_phantom_scripts",
+          "description": "Output does NOT reference scripts/ directory (this skill has no scripts)",
+          "type": "content_not_contains",
+          "pattern": "scripts/"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "write a manual for Skills/gitnexus/gitnexus-exploring",
+      "expected_output": "A concise manual.md that accurately maps the 5-step GitNexus workflow, mentions gitnexus_query and gitnexus_context tools, and does not over-pad with generic filler content.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "manual_md_exists",
+          "description": "manual.md file is created in the outputs directory",
+          "type": "file_exists",
+          "target": "manual.md"
+        },
+        {
+          "name": "gitnexus_tools_mentioned",
+          "description": "Both main GitNexus tools are referenced: gitnexus_query and gitnexus_context",
+          "type": "content_contains_all",
+          "patterns": ["gitnexus_query", "gitnexus_context"]
+        },
+        {
+          "name": "workflow_steps_present",
+          "description": "The 5-step workflow is represented (mentions READ gitnexus:// resource pattern and query/context tools)",
+          "type": "content_contains_any",
+          "patterns": ["gitnexus://", "Step 1", "步驟", "Workflow", "流程"]
+        },
+        {
+          "name": "not_over_padded",
+          "description": "The manual is not excessively long (word count reasonably proportional to the short source SKILL.md)",
+          "type": "max_word_count",
+          "max_words": 2000
+        }
+      ]
+    }
+  ]
+}

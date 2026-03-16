@@ -1,0 +1,30 @@
+{
+  "expectations": [
+    {
+      "text": "manual.md file is created in the outputs directory",
+      "passed": true,
+      "evidence": "manual.md found in outputs/"
+    },
+    {
+      "text": "Both main GitNexus tools are referenced: gitnexus_query and gitnexus_context",
+      "passed": true,
+      "evidence": "All patterns found"
+    },
+    {
+      "text": "The workflow is represented (mentions gitnexus:// resources or step structure)",
+      "passed": true,
+      "evidence": "Found: ['gitnexus://', 'Step 1', '步驟', 'Workflow', '流程']"
+    },
+    {
+      "text": "The manual is not excessively long (word count < 2000 words)",
+      "passed": true,
+      "evidence": "Word count: 898 (OK)"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  }
+}

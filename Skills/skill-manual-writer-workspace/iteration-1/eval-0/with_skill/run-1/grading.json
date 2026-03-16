@@ -1,0 +1,40 @@
+{
+  "expectations": [
+    {
+      "text": "manual.md file is created in the outputs directory",
+      "passed": true,
+      "evidence": "manual.md found in outputs/"
+    },
+    {
+      "text": "Output contains ASCII box-drawing characters (┌ ─ ┐ │ └ ┘ etc.)",
+      "passed": true,
+      "evidence": "Found 1189 matches for pattern '[┌─┐│└┘├┤┬┴]'"
+    },
+    {
+      "text": "All 7 ado-devops scripts are referenced (work_items, repos, core, search, setup, ado_client, wiki)",
+      "passed": true,
+      "evidence": "All patterns found"
+    },
+    {
+      "text": "Output contains flow direction symbols (▼ or →) indicating a flowchart",
+      "passed": true,
+      "evidence": "Found 49 matches for pattern '[▼→]'"
+    },
+    {
+      "text": "Output contains real CLI command examples referencing python and scripts/",
+      "passed": true,
+      "evidence": "Found 40 matches for pattern 'python.*scripts'"
+    },
+    {
+      "text": "Output contains an error handling or troubleshooting section",
+      "passed": true,
+      "evidence": "Found: ['錯誤', 'Error', 'error', '問題']"
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  }
+}
