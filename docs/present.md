@@ -34,29 +34,13 @@
 
 ### OpenAI AI 五階段（2024 年內部發布）
 
-- Level 1  Chatbots
-  - AI with conversational language
-  - → ChatGPT、Claude 問答，現在人人都在用
-  - → 大多數企業目前的使用方式
-
-- Level 2  Reasoners
-  - Human-level problem solving
-  - → AI 能像 PhD 一樣解決複雜問題
-  - → 模型技術已逼近此階段（GPT-o3、Claude 3.7）
-  - → 少數先進團隊已在實踐
-
-- Level 3  Agents
-  - Systems that can take actions
-  - → AI 自主行動、多步驟執行、跨工具協作
-  - → 我們這半年在做的核心方向
-
-- Level 4  Innovators
-  - AI that can aid in invention
-  - → AI 主動提出創新方案，人類驗證
-
-- Level 5  Organizations
-  - AI that can do the work of an organization
-  - → AI 能獨立運作整個組織——尚未實現
+| Level | 定義 | 現況理解 |
+| --- | --- | --- |
+| 1. Chatbots | AI with conversational language | ChatGPT、Claude 問答；現在人人都在用，也是大多數企業的起點 |
+| 2. Reasoners | Human-level problem solving | 模型能力已逼近；少數先進團隊開始實踐 |
+| 3. Agents | Systems that can take actions | AI 自主行動、多步驟執行、跨工具協作；我們這半年主攻這裡 |
+| 4. Innovators | AI that can aid in invention | AI 協助提出新方案，人類驗證 |
+| 5. Organizations | AI that can do the work of an organization | 尚未實現；更像長期終點 |
 
 - ★ **技術本身已在 Level 2→3，但大多數企業組織還在 Level 1**
 - ★ **這個落差，就是我們這半年在努力縮短的距離**
@@ -67,25 +51,25 @@
 
 **副標**：真正困難的不是個人會不會用，而是怎麼讓 AI 進入組織主流程
 
-- 個人用 AI 容易，組織用 AI 很難
-  - 個人：只需要自己改變習慣
-  - 組織：需要流程、工具、文化、知識全部對齊
+| 對比 | 個人用 AI | 組織用 AI |
+| --- | --- | --- |
+| 改變範圍 | 改自己的習慣就好 | 流程、工具、文化、知識都要對齊 |
+| 成功條件 | 一個人會用 | 可複製、可治理、可持續 |
+| 常見結果 | 快，但不可重複 | 慢，但一旦成形就能複利 |
 
 - ▸ **Deloitte 2025：只有 11% 企業真正部署 AI Agent**
 - ▸ **Gartner：40% Agentic 專案預計 2027 年前被取消**
 - ▸ **35% 企業連 Agentic AI 策略都還沒有**
 
-- 三個根本障礙（Deloitte 分析）
-  - 1. Legacy 系統整合——AI 無法插入現有流程
-  - 2. 資料品質不足——垃圾進，垃圾出
-  - 3. 缺乏方法論——不知道從哪裡開始
+### 三個根本障礙
+
+| 障礙 | 問題本質 | 我們的應對 |
+| --- | --- | --- |
+| 1. Legacy 系統整合 | AI 很難插入現有流程 | Azure DevOps MCP 整合 |
+| 2. 資料品質不足 | 垃圾進，垃圾出 | RAG + Knowledge Graph（下半年方向） |
+| 3. 缺乏方法論 | 不知道從哪裡開始 | SDD + Skill + Agent Harness 體系 |
 
 - ★ 其中最容易被低估的，其實是第三個：不是工具不夠，而是工作方法還沒換
-- 我們如何應對這三個障礙
-  - 系統整合：Azure DevOps MCP 整合
-  - 資料品質：RAG + Knowledge Graph（下半年方向）
-  - 方法論：SDD + Skill + Agent Harness 體系
-
 - → 我們不只是在「用 AI 工具」
   - 我們在建立讓組織從 Level 1 走向 Level 3 的工程體系
 
@@ -182,13 +166,13 @@
 
 **副標**：這是整份簡報最重要的一個觀念
 
-### 個人使用 AI 的樣子
-
-- 自己摸索 prompt，效果好但不可重複
-- 每次換任務都要重新給 AI 上下文
-- 好的 prompt 只活在自己腦中或私人筆記裡
-- 離職了，這個人的 AI 能力也跟著走
-- 不同人用 AI 產出的程式碼風格天差地遠
+| 面向 | 個人使用 AI | 團隊使用 AI |
+| --- | --- | --- |
+| 知識來源 | 自己摸索 prompt | 共同 Skill 資產庫 |
+| 上下文管理 | 每次重新解釋 | 標準化流程與共享規範 |
+| 一致性 | 風格差異大 | 輸出可控、可 review |
+| 傳承性 | 人走能力也走 | 知識留在 repo 裡 |
+| 擴展性 | 快，但難複製 | 慢一點，但能複利 |
 
 - 這不是個人的問題，這是缺乏基礎建設的問題
   - 就像每個人各自部署，沒有 CI/CD
@@ -196,13 +180,6 @@
 
 - ▸ **哈佛研究：企業導入 AI 後，初級工程師**
   - 就業 6 季內下滑 9–10%；資深工程師幾乎不受影響
-
-### 團隊使用 AI 的樣子
-
-- 共同的 Skill 資產庫：最佳實踐一次寫，所有人用
-- 標準化的 SDD 流程：先寫規格，AI 再執行
-- 版控的 prompt 工程：改善有記錄，回溯有依據
-- 新人也能快速上手：Skill 是知識的傳承載體
 
 - 團隊 AI 的飛輪效應
   - 更多人用 → 更多 Skill 被貢獻
@@ -223,25 +200,12 @@
 
 ### 市場上其實有四種代表性路線
 
-- 框架導向
-  - 代表：LangChain / LangGraph
-  - 強項：生態完整、抽象成熟、適合快速 POC
-  - 代價：抽象層多，debug 與維護成本高
-
-- 多 Agent 編排框架
-  - 代表：Google ADK
-  - 強項：模組化、多 Agent 編排、Workflow / MCP / A2A 整合能力強
-  - 代價：仍偏框架思維，適合建平台，不一定適合日常開發主流程
-
-- 可執行的 Agent Runtime
-  - 代表：Cline / Claude Code / OpenHands
-  - 強項：CLI 直接操作環境，AI 真的能讀檔、跑測試、改 code
-  - 代價：對工作環境與流程設計要求更高
-
-- 產品化通用 Agent
-  - 代表：DeepAgent
-  - 強項：Browser + apps + coding + workflow 整合展示很強
-  - 代價：比較像完整產品能力，不完全等於可內化的工程體系
+| 路線 | 代表 | 強項 | 代價 |
+| --- | --- | --- | --- |
+| 框架導向 | LangChain / LangGraph | 生態完整、抽象成熟、適合快速 POC | 抽象層多，debug 與維護成本高 |
+| 多 Agent 編排框架 | Google ADK | 模組化強，Workflow / MCP / A2A 整合能力高 | 偏平台建設，不一定適合日常開發主流程 |
+| 可執行的 Agent Runtime | Cline / Claude Code / OpenHands | CLI 直接操作環境，能讀檔、跑測試、改 code | 對工作環境與流程設計要求更高 |
+| 產品化通用 Agent | DeepAgent | Browser + apps + coding + workflow 展示力強 | 較像完整產品能力，不完全等於可內化工程體系 |
 
 ### 框架導向的吸引力與限制
 
@@ -290,33 +254,21 @@
 
 ### 三層運作架構
 
-- Claude SDK（模型層）
-  - 直接與 Anthropic API 溝通
-  - 最基本：傳 prompt、接回應、做 tool use
-  - 何時用：需要高度客製化的 API 整合
-
-- Cline SDK（Agent Runtime 層）
-  - 在 Claude SDK 之上構建 agent loop
-  - 管理工具執行、context window 策略
-  - 何時用：需要自動化任務執行
-
-- OpenCode SDK（IDE 整合層）
-  - IDE 內嵌、程式碼感知、diff 顯示
-  - 何時用：開發者日常工作中使用
+| 層級 | 代表 | 作用 | 適合何時用 |
+| --- | --- | --- | --- |
+| 模型層 | Claude SDK | 與模型 API 溝通，做基本 tool use | 需要高度客製化 API 整合 |
+| 執行層 | Cline SDK | 構建 agent loop，管理工具執行與 context 策略 | 需要自動化任務執行 |
+| 介面層 | OpenCode SDK | IDE 內嵌、程式碼感知、diff 顯示 | 開發者日常工作中使用 |
 
 - ★ **這三層不是競爭關係，是組合關係**
 
 ### CLI 為什麼對 LLM 這麼重要？
 
-- LLM 的眼睛是 context window
-  - 沒有 CLI → AI 只能看你貼給它的東西
-  - 有 CLI → AI 能主動讀取、執行、觀察結果
-
-- CLI 讓 AI 能做到的事
-  - 讀取整個 codebase 的結構
-  - 執行 npm test 並讀取失敗訊息
-  - git diff 看當前改動是否符合意圖
-  - 運行 build，觀察 error，自己修
+| 沒有 CLI | 有 CLI |
+| --- | --- |
+| AI 只能看你貼給它的內容 | AI 能主動讀檔、執行、觀察結果 |
+| 只能「說」 | 可以「做」 |
+| 難以形成閉環 | 可讀 codebase、跑測試、看 diff、修 build error |
 
 - 一個比喻
   - 沒有 CLI 的 AI = 只能「說」但不能「做」
@@ -521,21 +473,12 @@
 
 ### 四種記憶類型
 
-- 1. In-Context Memory（有 token 上限）
-  - 最快速直接，但有長度限制
-  - 適合：當前任務的即時工作記憶
-
-- 2. External Memory Store（無限制）
-  - DB / Vector Store / Redis
-  - 跨對話持久化，RAG 查詢注入
-
-- 3. Skill（知識壓縮）
-  - 把最重要的知識提煉成靜態文件
-  - 讀入即用，不依賴對話長度
-
-- 4. File System / Code
-  - Agent 直接讀寫檔案，Git 追蹤變化
-  - 最直觀的記憶形式，可回溯
+| 類型 | 特性 | 適合存什麼 |
+| --- | --- | --- |
+| In-Context Memory | 最快，但有 token 上限 | 當前任務的即時工作記憶 |
+| External Memory Store | 可跨對話持久化 | 大量歷史紀錄、檢索型知識 |
+| Skill | 知識壓縮、讀入即用 | 規範、最佳實踐、固定流程 |
+| File System / Code | 最直觀、可版控、可回溯 | 決策紀錄、程式碼狀態、產出物 |
 
 - ★ **記憶的本質不是「AI 記得什麼」，而是「知識存在哪裡、誰管理」**
 
@@ -543,7 +486,31 @@
 
 ---
 
-## 第 14 頁｜半年成果 + 下半年方向
+## 第 14 頁｜如果公司要做 AI Agent：建議的最小規格
+
+**副標**：不是把 LLM 接上 API 就夠了；至少要把角色、編排、記憶、工具、規則、安全、評估定義清楚
+
+### 一個 AI Agent 最低限度要定義的 7 個規格
+
+| 規格面向 | 最少要回答的問題 |
+| --- | --- |
+| 1. Role | 這個 agent 負責什麼、不負責什麼？輸入、輸出、成功條件是什麼？ |
+| 2. Orchestration | 單 agent 還是多 agent？哪些步驟可以自治，哪些地方必須有人類 checkpoint？ |
+| 3. Memory | 要記什麼、記多久、存在哪裡？In-context、Skill、檔案、DB 各自負責哪一層？ |
+| 4. Tools / Actions | 它能不能真的做事，而不是只回答問題？MCP、CLI、API、Browser 哪些能力要開、哪些不能開？ |
+| 5. Rules / Skills | 它要遵守哪些規則？Skill 負責「怎麼做」，Rules 負責「不能怎麼做」 |
+| 6. Safety / Audit | 權限怎麼控？錯了怎麼 rollback？誰可以審核？log 與 Git 紀錄怎麼留？ |
+| 7. Evaluation | 怎麼知道它有用？成功率、成本、延遲、人工介入率怎麼量測？ |
+
+- ★ **沒有規格的 agent，只是把 prompt 包成 service**
+- ★ **真正的難點不是模型選型，而是 orchestration、memory、tools、rules、audit 能不能一起成立**
+- → 建議起點：先做單 agent、少量工具、明確 Skill、可回滾，再逐步走向多 agent
+
+> 📝 **筆記**：這頁的目的不是讓大家馬上做 agent，而是建立共同語言：未來不管是做服務 AI 化還是新 server agent 化，都先拿這 7 點來對齊
+
+---
+
+## 第 15 頁｜半年成果 + 下半年方向
 
 **副標**：成果要量化、方向要具體、建議要可行動
 
@@ -587,51 +554,36 @@
 
 ---
 
-## 第 15 頁｜給全公司的三個具體建議
+## 第 16 頁｜給全公司的三個具體建議
 
 **副標**：不需要懂技術，從今天就可以開始
 
-### 建議 1：從你最無聊的工作開始
+### 建議 1：先用 Chat 試水溫，確認任務是否真的適合自動化
 
-- 不要先想「我能用 AI 做什麼酷的事」
-- 先想「我每週做哪件事最無聊、最重複」
-- 那就是最值得自動化的地方
+- Chat 是最低成本的 task decomposition 測試方式
+- 如果連在對話層都很難把目標、輸入輸出、限制條件、例外情況講清楚，代表這件事還不適合直接做成 agent 或 service
+- 先在 Chat 階段把任務邊界整理順，再決定要不要往 workflow automation 或 agent 化推進
+- ★ **先驗證任務結構，再投入工程成本，成功率會高很多**
 
-- 具體可以怎麼做？
-  - 整理會議記錄、寫需求文件
-  - 做競品分析、市場調查初稿
-  - 把你的想法快速原型化
+### 建議 2：從自己最熟悉的 Agent 入口開始，但累積的是可重用的資產
 
-- → 找我們聊，我們幫你設計
+- 如果現在最習慣的是 IDE 介面的 agent，就先從那裡開始，不需要一開始就追所有新工具
+- 真正應該沉澱的不是工具操作本身，而是 Skill、MCP 連接方式、規則、review 準則與工作習慣
+- 未來當 agent 分散到 IDE、CLI、Browser、pipeline 甚至 service 端時，這些資產仍然可以跨入口重用
+- ★ **工具是入口，Skill / MCP / rules 才是可遷移的核心能力**
 
-- 建議 2：用 AI，但要留下紀錄
-  - 你用 AI 做了什麼 → 寫成 Skill
-  - 你發現 AI 不能做什麼 → 也值得記錄
-- ★ **這些紀錄就是團隊的 AI 使用地圖**
+### 建議 3：把個人經驗轉成團隊共享的 AI 資產
 
-### 建議 3：把 AI 當新人，不是魔法師
-
-- 給清楚的指示（Spec），不要說「你懂的」
-- 審查它的輸出，不要直接用
-- 當它做錯了，告訴它為什麼，它下次會更好
-
-- *I have a sense that I could be 10X more powerful,
-    but not claiming the boost feels like a skill issue.*
-  - — Andrej Karpathy，2025 年底
-
-- 連頂尖 AI 科學家都有這種感受
-- 說明這不是在炒作，是真實的結構性改變
-
-- ★ **我們不追工具，我們建能力**
-  - 工具 6 個月就換，能力跟著你一輩子
-
-- → 我們已經走了半年，歡迎你現在加入
+- AI 發展速度太快，單打獨鬥很容易重複踩坑；而且每個人接觸的場景都不一樣
+- 有人懂開發，有人懂流程，有人懂領域知識；把這些經驗沉澱成共用資產，團隊的學習速度會遠高於個人各自摸索
+- 分享的不只是 prompt，也包含 Skill、規範、踩坑紀錄、成功案例與可追溯決策
+- ★ **AI 導入的複利來自資產共享，不來自個人偶發的高光表現**
 
 > 📝 **筆記**：結語重點：行動 > 完美。今天開始用一個 Skill，比等到完全理解再開始更有價值
 
 ---
 
-## 第 16 頁｜新觀點｜Agent Engineering：一個新的工程紀律
+## 第 17 頁｜新觀點｜Agent Engineering：一個新的工程紀律
 
 **副標**：來源：LangChain Blog（Dec 2025）— 跟我們在做的事完全呼應
 
@@ -684,7 +636,7 @@
 
 ---
 
-## 第 17 頁｜新觀點｜Context Engineering：Prompt Engineering 的進化
+## 第 18 頁｜新觀點｜Context Engineering：Prompt Engineering 的進化
 
 **副標**：來源：LangChain Blog（2025）— 直接解釋了我們的 Skill 體系為什麼有效
 
@@ -738,7 +690,7 @@
 
 ---
 
-## 第 18 頁｜新觀點｜LangChain 調查數據 + 真實 Agent 案例
+## 第 19 頁｜新觀點｜LangChain 調查數據 + 真實 Agent 案例
 
 **副標**：來源：State of AI Agents 2026（1,300+ 人）+ LangChain GTM Agent（Mar 2026）
 
@@ -789,7 +741,7 @@
 
 ---
 
-## 第 19 頁｜新觀點｜Agent = Model + Harness（LangChain，2026 年 3 月）
+## 第 20 頁｜新觀點｜Agent = Model + Harness（LangChain，2026 年 3 月）
 
 **副標**：最新發布的框架：解釋了為什麼相同模型在不同團隊手中效果差那麼多
 
@@ -839,7 +791,7 @@
 
 ---
 
-## 第 20 頁｜新觀點｜Coding Agent 正在顛覆 EPD 分工（LangChain，2026 年 3 月）
+## 第 21 頁｜新觀點｜Coding Agent 正在顛覆 EPD 分工（LangChain，2026 年 3 月）
 
 **副標**：來源：「How Coding Agents Are Reshaping Engineering, Product and Design」——這篇給非工程受眾衝擊最大
 
@@ -892,7 +844,7 @@
 
 ---
 
-## 第 21 頁｜新觀點總結｜LangChain 的語言，重新詮釋我們在做的事
+## 第 22 頁｜新觀點總結｜LangChain 的語言，重新詮釋我們在做的事
 
 **副標**：用業界共識的詞彙，幫我們的工作定位——讓聽眾知道我們不是在發明輪子，是在走對的路
 
@@ -944,7 +896,7 @@
 
 ---
 
-## 第 22 頁｜A2A Protocol (1/2)：Agent 之間溝通的開放標準
+## 第 23 頁｜A2A Protocol (1/2)：Agent 之間溝通的開放標準
 
 **副標**：Google 於 2025 年 4 月發布，現已移交 Linux Foundation 治理——長官最關心的背景
 
@@ -998,7 +950,7 @@
 
 ---
 
-## 第 23 頁｜A2A Protocol (2/2)：企業場景、現實挑戰、我們的策略
+## 第 24 頁｜A2A Protocol (2/2)：企業場景、現實挑戰、我們的策略
 
 **副標**：真實的採用現況 + 對我們公司的意義——不只看美好願景，也看真實困難
 
@@ -1057,7 +1009,7 @@
 
 ---
 
-## 第 24 頁｜延伸補充：Agent Memory 的踩坑經驗與解法
+## 第 25 頁｜延伸補充：Agent Memory 的踩坑經驗與解法
 
 **副標**：我們實際碰到的問題，以及目前的應對方式
 
@@ -1096,7 +1048,7 @@
 
 ---
 
-## 第 25 頁｜延伸補充：RAG + Knowledge Graph 讓 AI 讀懂程式碼
+## 第 26 頁｜延伸補充：RAG + Knowledge Graph 讓 AI 讀懂程式碼
 
 **副標**：傳統 RAG 解決文字問題，Knowledge Graph 解決邏輯問題
 
@@ -1137,7 +1089,7 @@
 
 ---
 
-## 第 26 頁｜延伸補充：Git 在 AI 開發中的全新角色 (1/2)
+## 第 27 頁｜延伸補充：Git 在 AI 開發中的全新角色 (1/2)
 
 **副標**：AI 時代的 Git 用法跟傳統完全相反——不是記錄完成，而是保護起點
 
@@ -1187,7 +1139,7 @@
 
 ---
 
-## 第 27 頁｜延伸補充：Git 在 AI 開發中的全新角色 (2/2)
+## 第 28 頁｜延伸補充：Git 在 AI 開發中的全新角色 (2/2)
 
 **副標**：這是 AI 寫作時代最重要但最少人知道的 Git 技巧——本質是讓 AI 像一支團隊一樣工作
 
