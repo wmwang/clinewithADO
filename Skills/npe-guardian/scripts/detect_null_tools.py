@@ -15,10 +15,6 @@ BUILD_FILES = (
 
 PATTERNS = {
     "spotbugs": re.compile(r"spotbugs|com\.github\.spotbugs", re.IGNORECASE),
-    "nullaway": re.compile(r"NullAway|error_prone|errorprone|Xep:NullAway", re.IGNORECASE),
-    "checker_framework": re.compile(
-        r"checkerframework|org\.checkerframework|NullnessChecker", re.IGNORECASE
-    ),
 }
 
 
@@ -41,15 +37,7 @@ def main() -> int:
     }
 
     print(f"spotbugs={flags['spotbugs']}")
-    print(f"nullaway={flags['nullaway']}")
-    print(f"checker_framework={flags['checker_framework']}")
-
-    if flags["checker_framework"]:
-        print("recommended_mode=deep")
-    elif flags["nullaway"]:
-        print("recommended_mode=strict")
-    else:
-        print("recommended_mode=fast")
+    print("recommended_mode=fast")
     return 0
 
 

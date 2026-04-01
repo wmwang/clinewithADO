@@ -6,7 +6,7 @@ Use this file after a null-safety finding has already been confirmed against the
 
 Choose the smallest fix that preserves current semantics and matches local style.
 
-If the finding comes from NullAway or Checker Framework, prefer a local code repair before escalating to repository-wide annotation or compiler-policy changes.
+Always prefer code repairs that change runtime behavior safely and explicitly. Do not use nullness annotations as the primary fix strategy in this skill.
 
 ## Patterns
 
@@ -82,17 +82,7 @@ return config.getTimeout();
 
 Prefer local branching over changing the helper signature unless multiple call sites are broken.
 
-### 6. Add annotation only when the project already uses annotations
-
-Use `@Nullable` or `@NonNull` only when the repository already has an established nullness annotation set.
-
-Rules:
-
-- Reuse the project's existing annotation package.
-- Do not mix annotation ecosystems in the same patch.
-- Do not introduce annotation-only changes without an actual behavior fix unless the user asked for it.
-
-### 7. Optional as boundary adapter, not blanket rewrite
+### 6. Optional as boundary adapter, not blanket rewrite
 
 Use `Optional` when the surrounding API already models absence explicitly.
 
@@ -105,6 +95,15 @@ return Optional.ofNullable(repository.find(id))
 ```
 
 Avoid converting multiple signatures in one pass unless the task is specifically a broader refactor.
+
+## Explicitly Avoid
+
+Do not use these as the default repair style for this skill:
+
+- adding `@Nullable`, `@NonNull`, or similar nullness annotations
+- introducing annotation-only patches to silence tooling
+- starting a repository-wide nullness annotation campaign
+- changing compiler nullness policy as part of a bug-fix patch
 
 ## Smells That Need Extra Care
 
