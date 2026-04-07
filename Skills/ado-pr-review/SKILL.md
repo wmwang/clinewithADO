@@ -22,7 +22,7 @@ description: |
 
 ## 設定（首次使用必讀）
 
-此技能與 `ado-devops` 共用同一組憑證（`~/.ado-devops.env`）。
+憑證儲存於 `~/.ado-devops.env`。若已安裝並設定過 `ado-devops` 技能，設定會自動沿用，無需重新輸入。若未安裝 `ado-devops`，此技能內建的 `setup.py` 可獨立完成設定。
 
 **Step 0：偵測 Python 指令**
 
