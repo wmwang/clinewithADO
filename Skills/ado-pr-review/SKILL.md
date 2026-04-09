@@ -3,6 +3,7 @@ name: ado-pr-review
 description: |
   針對 Azure DevOps PR 進行 AI Code Review，並可將 review 結果以 inline 留言形式發布到 ADO PR。
   主要用於 Java Spring Boot 專案，依據 CA 規則、Security、Performance、測試覆蓋率等面向審查。
+  支援 Auto-fix：當 PR 作者在 review 留言下回覆「fix it」類指令，可自動修改程式碼並 commit 到 source branch。
 
   觸發情境包含（但不限於）：
   - 「幫我 review PR #123」、「看一下這個 PR 的程式碼」、「code review PR 45」
@@ -10,13 +11,18 @@ description: |
   - 「檢查 PR 的 security issue」、「看看有沒有 N+1 問題」
   - 「把 review 結果留言到 ADO」、「發 inline comment 到 PR」
   - 「review 完發 BLOCKER 留言」、「幫我貼 review 結果」
+  - 「幫我 fix review 的建議」、「自動修 review 留言的問題」、「apply fix」
+  - 「有哪些 review 留言說要修的」、「scan PR 有沒有 fix it 的回覆」
 
   即使使用者只說「看一下這個 PR」或「幫我 review 一下」，只要情境涉及 ADO PR，就應觸發此技能。
 ---
 
 # ADO PR AI Code Review 技能
 
-對 Azure DevOps PR 進行自動化 AI Code Review，涵蓋 CA 規範、Security、Performance、Spring Boot 最佳實踐與測試覆蓋，並可選擇性地將 review 結果以 inline 留言形式回寫到 ADO PR。
+對 Azure DevOps PR 進行自動化 AI Code Review，涵蓋 CA 規範、Security、Performance、Spring Boot 最佳實踐與測試覆蓋。
+支援兩個階段：
+- **Phase 1 — Review**：分析程式碼，發布 inline review 留言到 ADO PR
+- **Phase 2 — Auto-fix**：掃描 PR threads 中的「fix it」回覆，自動修改程式碼並 commit 回 source branch
 
 ---
 
@@ -241,6 +247,105 @@ python3 "$SCRIPT_DIR/pr_comment.py" <repo> <pr_id> \
 
 ---
 
+## Phase 2：Auto-fix 流程
+
+PR 作者在 review 留言下回覆「fix it」（或類似語意），可觸發 Auto-fix。
+
+### Auto-fix 觸發關鍵字（不分大小寫）
+
+英文：`fix it`、`fix this`、`apply fix`、`apply the suggestion`、`go ahead`、`ok`、`sounds good`  
+中文：`修一下`、`幫我修`、`修掉`、`修正`、`套用`、`好`、`同意`
+
+### Step 1：掃描有「fix it」回覆的 threads
+
+```bash
+python3 "$SCRIPT_DIR/pr_autofix.py" scan <repo> <pr_id>
+```
+
+輸出範例：
+```json
+{
+  "pr_id": 45,
+  "fixable_count": 2,
+  "fixable_threads": [
+    {
+      "thread_id": 12,
+      "file": "/src/main/java/com/example/PaymentService.java",
+      "line": 45,
+      "review_comment": "🔴 **[BLOCKER]**\n\n字串拼接建構 SQL...",
+      "fix_reply": "fix it",
+      "fix_reply_by": "偉民 王"
+    },
+    {
+      "thread_id": 15,
+      "file": "/src/main/java/com/example/User.java",
+      "line": 15,
+      "review_comment": "🟡 **[MINOR]**\n\nEmail 驗證過於寬鬆...",
+      "fix_reply": "好",
+      "fix_reply_by": "偉民 王"
+    }
+  ]
+}
+```
+
+僅回傳狀態為 `active`（未 resolved）的 threads，已 resolve 的不重複處理。
+
+### Step 2：閱讀 review_comment，理解修改意圖
+
+對每個 fixable thread：
+1. 讀取 `review_comment` 的完整建議
+2. 若有 `file` 欄位，用 `pr_fetch.py --file` 取得現在的完整檔案內容
+3. 根據建議修改程式碼，**確保只改動 review 指出的問題，不動其他部分**
+4. 修改前先向使用者確認修改方向（除非使用者說「自動全部 fix」）
+
+> 有些 thread 沒有 `file`（PR-level 留言，如「請加 .gitignore」），無法直接改程式碼，改以文字說明引導使用者手動處理。
+
+### Step 3：寫出修改後的檔案，commit 到 source branch
+
+```bash
+# 1. 把修改後的內容寫到本機暫存檔
+cat > /tmp/fix_Foo.java << 'EOF'
+<修改後的完整檔案內容>
+EOF
+
+# 2. Commit 到 source branch
+python3 "$SCRIPT_DIR/pr_autofix.py" push <repo> <source_branch> \
+  --file "/src/main/java/com/example/Foo.java" \
+  --content-file /tmp/fix_Foo.java \
+  --message "fix: apply review suggestion — correct email validation in User.java"
+```
+
+**注意**：`--file` 是 repo 內的路徑（以 `/` 開頭），`--content-file` 是本機暫存檔路徑。
+
+多個檔案須分別 push（每次 push 都是一個 commit）。
+
+### Step 4：回覆並 resolve thread
+
+每個 fix 完成後，回覆該 thread 並 resolve：
+
+```bash
+# 回覆 commit 資訊
+python3 "$SCRIPT_DIR/pr_autofix.py" reply <repo> <pr_id> <thread_id> \
+  "已修正，commit: abc1234 — 改用 regex 驗證 email 格式。"
+
+# 將 thread 標記為已解決
+python3 "$SCRIPT_DIR/pr_autofix.py" resolve <repo> <pr_id> <thread_id>
+```
+
+### Step 5：向使用者報告結果
+
+```
+## ✅ Auto-fix 完成
+
+| Thread | 檔案 | 行數 | 處理結果 |
+|--------|------|------|---------|
+| #12 | PaymentService.java | 45 | ✅ Commit abc1234 — 改用 @Query 參數化查詢 |
+| #15 | User.java | 15 | ✅ Commit def5678 — 改用 regex 驗證 email |
+| #8  | (PR-level) | — | ⚠️ 需手動處理：請新增 .gitignore 並執行 git rm -r --cached out/ |
+```
+
+---
+
 ## 腳本說明
 
 此技能的腳本位於 **SKILL.md 同層的 `scripts/` 子目錄**。執行前先取得 SKILL.md 的絕對路徑：
@@ -253,8 +358,9 @@ SCRIPT_DIR="<此 SKILL.md 所在目錄>/scripts"
 |------|------|
 | `pr_fetch.py` | 取得 PR 資訊與變更檔案的完整內容 |
 | `pr_comment.py` | 將 review 結果批次發布到 ADO PR |
-| `ado_client.py` | 共用 ADO HTTP client（與 ado-devops 技能相同） |
-| `setup.py` | 設定憑證（與 ado-devops 技能共用 `~/.ado-devops.env`） |
+| `pr_autofix.py` | 掃描 fix it 回覆、commit 修改、reply/resolve threads |
+| `ado_client.py` | 共用 ADO HTTP client |
+| `setup.py` | 設定憑證（`~/.ado-devops.env`） |
 
 CA 規則參考：`references/java_springboot_ca.md`
 
@@ -266,7 +372,8 @@ CA 規則參考：`references/java_springboot_ca.md`
 |------|------|---------|
 | `Missing credentials` | PAT/ORG/PROJECT 未設定 | 執行 `setup.py save ...` |
 | `HTTP 401` | PAT 失效或過期 | 請使用者重新產生 PAT |
-| `HTTP 403` | PAT 缺少 Code 或 Thread 寫入權限 | 確認 PAT 包含 **Code (Read)** 與 **Pull Request Threads (Read & Write)** |
+| `HTTP 403` | PAT 缺少 Code 或 Thread 寫入權限 | 確認 PAT 包含 **Code (Read & Write)** 與 **Pull Request Threads (Read & Write)** |
 | `HTTP 404` | PR ID 或 repo 不存在 | 確認 repo 名稱與 PR ID |
 | `[truncated]` | 檔案超過預設 1000 行 | 加 `--max-lines 2000` 或分段用 `--file` 讀取 |
 | inline comment 失敗 | 行號超出實際檔案範圍 | 重新確認 PR 中的實際行號 |
+| push HTTP 409 | Branch 已被其他 push 更新（objectId 不符） | 重新執行 `push`（腳本會重新取得最新 HEAD） |
