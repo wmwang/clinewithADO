@@ -1,0 +1,8 @@
+{
+  "repo": "javademo",
+  "max_prs": 800,
+  "include_wont_fix": true,
+  "output_language": "zh-TW",
+  "output_file": "output/team_rules.md",
+  "_comment": "要換 repo 只需修改 'repo' 欄位。max_prs 建議設為略大於實際 PR 總數。"
+}
