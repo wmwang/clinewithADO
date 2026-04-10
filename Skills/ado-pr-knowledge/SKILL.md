@@ -53,9 +53,20 @@ PAT 需要 **Code (Read)** 與 **Pull Request Threads (Read)** 權限。
 
 ---
 
-## 工作流程
+## 選擇工作模式
 
-```
+| 模式 | 適用場景 | 說明 |
+|------|---------|------|
+| **標準模式**（單 agent） | PR 總數 < 200 | 全部 threads 一次分析，簡單快速 |
+| **Sub-agent 模式**（Map-Reduce） | PR 總數 ≥ 200 | 每批交給獨立 sub-agent，避免 context 爆炸 |
+
+> **判斷規則**：Step 1 確認 PR 數量後，若 PR > 200 自動改用 Sub-agent 模式；否則走標準模式。
+
+---
+
+## 標準模式工作流程
+
+```bash
 SKILL_DIR="<此 SKILL.md 所在目錄>"
 SCRIPT_DIR="$SKILL_DIR/scripts"
 WORK_DIR="/tmp/pr_knowledge_$(date +%Y%m%d)"
@@ -213,6 +224,119 @@ cp "$SKILL_DIR/output/team_rules.md" \
 ```
 
 在 `ado-pr-review` 的 review 過程中（Step 3），除了讀取 `java_springboot_ca.md`，也要讀取 `team_rules.md`，且 **team_rules.md 的規則優先級高於通用 CA 規則**（因為它反映的是這個團隊的實際決定）。
+
+---
+
+## Sub-agent 模式工作流程（Map-Reduce，PR ≥ 200）
+
+整體架構：
+
+```
+Main agent
+  ├── Step 1: 確認 PR 數量 → 決定批次數
+  ├── Step 2: 分批 fetch → batch_0.json ... batch_N.json
+  ├── Step 3: 同時 spawn N 個 sub-agents（Map）
+  │     每個 sub-agent 獨立分析一批，回傳 JSON pattern summary
+  │     → 儲存為 summaries/batch_summary_0.txt ... batch_summary_N.txt
+  └── Step 4: main agent 執行 Reduce merge → team_rules.md
+```
+
+```bash
+SKILL_DIR="<此 SKILL.md 所在目錄>"
+SCRIPT_DIR="$SKILL_DIR/scripts"
+WORK_DIR="/tmp/pr_knowledge_$(date +%Y%m%d)"
+SUMMARIES_DIR="$WORK_DIR/summaries"
+mkdir -p "$WORK_DIR" "$SUMMARIES_DIR"
+```
+
+---
+
+### Sub-agent Step 1–2：確認數量、分批 Fetch（同標準模式）
+
+執行方式與標準模式的 Step 1–2 完全相同。
+
+---
+
+### Sub-agent Step 3：Map — 並行 spawn sub-agents
+
+**在同一則訊息中一次 spawn 所有 sub-agents**（並行執行，互相不等待）：
+
+對每個 batch_N.json，為它產生一份分析 prompt：
+
+```bash
+# 為 batch 0 產生 per-batch prompt
+python3 "$SCRIPT_DIR/pr_knowledge_build.py" \
+  --input-file "$WORK_DIR/batch_0.json" \
+  --per-batch-prompt \
+  --batch-index 0 \
+  --total-batches 16 \
+  > /tmp/prompt_batch_0.txt
+```
+
+然後以這份 prompt 的內容啟動 sub-agent，指示如下：
+
+```
+請根據以下 prompt 分析這批 PR review threads，
+輸出 JSON pattern summary（不要輸出其他文字），
+完成後將輸出儲存到：$SUMMARIES_DIR/batch_summary_0.txt
+
+[貼上 /tmp/prompt_batch_0.txt 的內容]
+```
+
+**重要**：所有 batch 的 sub-agent 在同一則訊息中一起 spawn，讓它們並行執行。
+對 780 個 PR（16 批），等同 16 個 sub-agents 同時跑，總時間約等於單批時間。
+
+---
+
+### Sub-agent Step 4：Reduce — 合併所有批次結果
+
+等所有 sub-agents 完成後（summaries 目錄有 16 個 .txt），main agent 執行 Reduce：
+
+**1. 先統計總量（從所有 batch JSON 累加）：**
+
+```bash
+python3 "$SCRIPT_DIR/pr_knowledge_build.py" \
+  --input-dir "$WORK_DIR" \
+  --stats-only 2>/dev/null \
+  | python3 -c "
+import json,sys
+s=json.load(sys.stdin)
+print(f'total_prs={s[\"total_prs\"]} total_threads={s[\"total_threads\"]}')
+"
+```
+
+**2. 產生 merge prompt：**
+
+```bash
+python3 "$SCRIPT_DIR/pr_knowledge_build.py" \
+  --merge-prompt \
+  --summaries-dir "$SUMMARIES_DIR" \
+  --total-prs 780 \
+  --total-threads 3120 \
+  > /tmp/merge_prompt.txt
+```
+
+**3. Main agent 讀取 `/tmp/merge_prompt.txt`，執行分析**，跨批次合併相同 pattern、加總 occurrences，輸出最終 `team_rules.md`。
+
+**4. 寫入輸出檔：**
+
+```bash
+mkdir -p "$SKILL_DIR/output"
+# Claude 將分析結果寫入：
+# $SKILL_DIR/output/team_rules.md
+```
+
+---
+
+### Sub-agent 模式 context 預估
+
+| 角色 | 每次 context | 說明 |
+|------|------------|------|
+| 每個 sub-agent | ~60K tokens | 50 PR × 8 threads × 150 tokens |
+| Main agent (Reduce) | ~35K tokens | 16 summaries × ~2K tokens each |
+| **合計峰值** | **~60K tokens** | Sub-agents 並行，互不干擾 |
+
+相比標準模式直接跑 780 PR 的 ~936K tokens，**降低 94%**。
 
 ---
 
