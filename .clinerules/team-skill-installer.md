@@ -1,0 +1,1 @@
+../Skills/team-skill-installer/SKILL.md
