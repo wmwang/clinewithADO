@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"Skills/superpowers-plugin/.claude-plugin\")",
+      "Bash(mkdir -p \"Skills/superpowers-plugin/skills\")",
+      "Bash(python -c ':*)",
+      "Bash(python \"Skills/team-skill-installer/scripts/install_superpowers.py\" --help)",
+      "Bash(python \"Skills/team-skill-installer/scripts/install_superpowers.py\")",
+      "Bash(python \".claude/skills/team-skill-installer/scripts/install_superpowers.py\")"
+    ]
+  }
+}
