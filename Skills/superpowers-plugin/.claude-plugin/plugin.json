@@ -1,0 +1,7 @@
+{
+  "name": "superpowers",
+  "version": "1.0.0",
+  "description": "AI 進階工作流程插件，提供 brainstorming、TDD、debugging、計畫撰寫等結構化開發流程",
+  "author": "Team",
+  "skills": ["superpowers-workflow"]
+}
