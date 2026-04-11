@@ -106,7 +106,7 @@ claude --version 2>/dev/null
 
 先詢問使用者要安裝哪些：
 
-> **基礎工具套件（建議全裝）：**
+> **基礎AI Coding開發工具流程套件（建議全裝）：**
 >
 > 1. **Superpowers** — AI 進階工作流程插件，提供 brainstorming、TDD、debugging、計畫撰寫等結構化開發流程。讓 AI 在寫程式前先思考、先規劃，品質大幅提升。
 >    - 支援：Claude Code（plugin 方式）、Cline（規則檔方式）
