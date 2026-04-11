@@ -122,7 +122,7 @@ repo 已內建 Superpowers 的完整 plugin 包，路徑為 `$REPO_ROOT/Skills/s
 用 `scripts/install_superpowers.py` 執行離線安裝：
 
 ```bash
-python3 "$REPO_ROOT/Skills/team-skill-installer/scripts/install_superpowers.py" "$REPO_ROOT/Skills/superpowers-plugin"
+python3 "$REPO_ROOT/.claude/skills/team-skill-installer/scripts/install_superpowers.py" "$REPO_ROOT/Skills/superpowers-plugin"
 ```
 
 腳本會做以下事情：
@@ -165,7 +165,7 @@ npm config set registry <公司內部 registry URL>
 執行 `scripts/scan_skills.py` 來取得技能清單：
 
 ```bash
-python3 "$REPO_ROOT/Skills/team-skill-installer/scripts/scan_skills.py" "$REPO_ROOT/Skills"
+python3 "$REPO_ROOT/.claude/skills/team-skill-installer/scripts/scan_skills.py" "$REPO_ROOT/Skills"
 ```
 
 這個腳本會輸出 JSON 格式的技能清單。用這份清單向使用者展示可安裝的技能。
@@ -203,7 +203,7 @@ Claude Code 和 Cline 都會讀取這個路徑，安裝一次兩邊都能用。
 使用 `scripts/install_skill.py` 對每個選定的技能執行安裝：
 
 ```bash
-python3 "$REPO_ROOT/Skills/team-skill-installer/scripts/install_skill.py" \
+python3 "$REPO_ROOT/.claude/skills/team-skill-installer/scripts/install_skill.py" \
   --source "$REPO_ROOT/Skills/$SKILL_NAME" \
   --skill-name "$SKILL_NAME" \
   --action install
@@ -240,7 +240,7 @@ Windows 使用者的路徑會自動轉換（`~` = `%USERPROFILE%`），不需要
 #### 偵測已安裝技能
 
 ```bash
-python3 "$REPO_ROOT/Skills/team-skill-installer/scripts/scan_skills.py" \
+python3 "$REPO_ROOT/.claude/skills/team-skill-installer/scripts/scan_skills.py" \
   "$REPO_ROOT/Skills" \
   --check-installed
 ```
@@ -252,7 +252,7 @@ python3 "$REPO_ROOT/Skills/team-skill-installer/scripts/scan_skills.py" \
 #### 刪除技能
 
 ```bash
-python3 "$REPO_ROOT/Skills/team-skill-installer/scripts/install_skill.py" \
+python3 "$REPO_ROOT/.claude/skills/team-skill-installer/scripts/install_skill.py" \
   --skill-name "$SKILL_NAME" \
   --action uninstall
 ```
@@ -275,12 +275,11 @@ python3 "$REPO_ROOT/Skills/team-skill-installer/scripts/install_skill.py" \
 | npe-guardian | Java NullPointerException 偵測與修復 | 適用 Java 專案 |
 | prometheus | 自然語言查 Prometheus 指標 | 適用 K8s 環境 |
 | skill-creator | 開發並測試新的 AI 技能 | 進階 |
-| openspec | OpenSpec 規格驅動開發指令集 | 搭配 OpenSpec 套件 |
 | spec-kit-skill | GitHub Spec-Kit 憲章驅動開發 | 進階 |
 | superpowers-workflow | Superpowers 完整開發流程整合 | 搭配 Superpowers 套件 |
 | skill-manual-writer | 為技能自動產生操作手冊 | 進階 |
-| k8s-prometheus | K8s + Prometheus 指標查詢 | 適用 K8s 環境 |
-| pdf-book-study-kit | PDF 書籍學習輔助 | 選裝 |
+
+> 注意：此表格為靜態參考。實際可安裝的技能以 `scan_skills.py` 掃描結果為準。
 
 ## 錯誤處理
 
