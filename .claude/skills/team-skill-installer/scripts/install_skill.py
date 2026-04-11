@@ -28,7 +28,13 @@ import os
 import shutil
 from datetime import datetime
 
-DEFAULT_SKILLS_DIR = os.path.join(os.path.expanduser("~"), ".claude", "skills")
+CLAUDE_SKILLS_DIR = os.path.join(os.path.expanduser("~"), ".claude", "skills")
+CLINE_SKILLS_DIR = os.path.join(os.path.expanduser("~"), ".cline", "skills")
+
+
+def get_target_dirs(claude_dir: str, cline_dir: str) -> list:
+    """回傳要安裝的目標目錄清單"""
+    return [claude_dir, cline_dir]
 
 
 def backup_dir(target: str) -> str:
@@ -39,11 +45,8 @@ def backup_dir(target: str) -> str:
     return backup_path
 
 
-def do_install(source: str, skill_name: str, skills_dir: str) -> dict:
-    """安裝或更新技能"""
-    if not source or not os.path.isdir(source):
-        return {"skill": skill_name, "action": "install", "error": f"來源目錄不存在 — {source}"}
-
+def install_to_dir(source: str, skill_name: str, skills_dir: str) -> dict:
+    """安裝或更新技能到單一目錄"""
     target = os.path.join(skills_dir, skill_name)
     os.makedirs(skills_dir, exist_ok=True)
 
@@ -55,54 +58,81 @@ def do_install(source: str, skill_name: str, skills_dir: str) -> dict:
         action_text = "已安裝"
 
     shutil.copytree(source, target)
+    return {"status": action_text, "path": target}
+
+
+def do_install(source: str, skill_name: str, claude_dir: str, cline_dir: str) -> dict:
+    """安裝或更新技能（雙路徑）"""
+    if not source or not os.path.isdir(source):
+        return {"skill": skill_name, "action": "install", "error": f"來源目錄不存在 — {source}"}
+
+    results = []
+    for d in get_target_dirs(claude_dir, cline_dir):
+        r = install_to_dir(source, skill_name, d)
+        results.append(r)
 
     return {
         "skill": skill_name,
         "action": "install",
-        "status": action_text,
-        "path": target,
+        "status": results[0]["status"],
+        "paths": {
+            "claude": results[0]["path"],
+            "cline": results[1]["path"],
+        },
     }
 
 
-def do_uninstall(skill_name: str, skills_dir: str) -> dict:
-    """刪除技能"""
-    target = os.path.join(skills_dir, skill_name)
+def do_uninstall(skill_name: str, claude_dir: str, cline_dir: str) -> dict:
+    """刪除技能（雙路徑）"""
+    removed = []
+    for skills_dir in get_target_dirs(claude_dir, cline_dir):
+        target = os.path.join(skills_dir, skill_name)
+        if os.path.isdir(target):
+            shutil.rmtree(target)
+            # 清理備份
+            for item in os.listdir(skills_dir):
+                if item.startswith(f"{skill_name}.bak."):
+                    shutil.rmtree(os.path.join(skills_dir, item), ignore_errors=True)
+            removed.append(target)
 
-    if os.path.isdir(target):
-        shutil.rmtree(target)
-        # 清理備份
-        for item in os.listdir(skills_dir):
-            if item.startswith(f"{skill_name}.bak."):
-                shutil.rmtree(os.path.join(skills_dir, item), ignore_errors=True)
-        return {"skill": skill_name, "action": "uninstall", "status": "已刪除", "path": target}
+    if removed:
+        return {"skill": skill_name, "action": "uninstall", "status": "已刪除", "paths": removed}
     else:
         return {"skill": skill_name, "action": "uninstall", "status": "未安裝，跳過"}
 
 
-def do_check(skill_name: str, skills_dir: str) -> dict:
-    """檢查安裝狀態"""
-    target = os.path.join(skills_dir, skill_name)
+def do_check(skill_name: str, claude_dir: str, cline_dir: str) -> dict:
+    """檢查安裝狀態（雙路徑）"""
+    claude_target = os.path.join(claude_dir, skill_name)
+    cline_target = os.path.join(cline_dir, skill_name)
     return {
         "skill": skill_name,
-        "installed": os.path.isdir(target),
-        "path": target if os.path.isdir(target) else None,
+        "installed": {
+            "claude": os.path.isdir(claude_target),
+            "cline": os.path.isdir(cline_target),
+        },
+        "paths": {
+            "claude": claude_target if os.path.isdir(claude_target) else None,
+            "cline": cline_target if os.path.isdir(cline_target) else None,
+        },
     }
 
 
 def main():
-    parser = argparse.ArgumentParser(description="安裝/更新/刪除單一技能到 ~/.claude/skills/")
+    parser = argparse.ArgumentParser(description="安裝/更新/刪除單一技能到 ~/.claude/skills/ 和 ~/.cline/skills/")
     parser.add_argument("--source", default="", help="來源技能目錄路徑")
     parser.add_argument("--skill-name", required=True, help="技能名稱")
-    parser.add_argument("--skills-dir", default=DEFAULT_SKILLS_DIR, help="安裝目標目錄 (預設 ~/.claude/skills)")
+    parser.add_argument("--claude-dir", default=CLAUDE_SKILLS_DIR, help="Claude Code skills 目錄 (預設 ~/.claude/skills)")
+    parser.add_argument("--cline-dir", default=CLINE_SKILLS_DIR, help="Cline skills 目錄 (預設 ~/.cline/skills)")
     parser.add_argument("--action", required=True, choices=["install", "uninstall", "check"])
     args = parser.parse_args()
 
     if args.action == "install":
-        result = do_install(args.source, args.skill_name, args.skills_dir)
+        result = do_install(args.source, args.skill_name, args.claude_dir, args.cline_dir)
     elif args.action == "uninstall":
-        result = do_uninstall(args.skill_name, args.skills_dir)
+        result = do_uninstall(args.skill_name, args.claude_dir, args.cline_dir)
     else:
-        result = do_check(args.skill_name, args.skills_dir)
+        result = do_check(args.skill_name, args.claude_dir, args.cline_dir)
 
     print(json.dumps(result, indent=2, ensure_ascii=False))
 

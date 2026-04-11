@@ -104,22 +104,12 @@ def install_plugin(source_dir: str, version: str):
     print("  完成！重啟 Claude Code 即可使用")
 
 
-def install_skills_flat(source_dir: str):
-    """把每個 skill 打散放到 ~/.claude/skills/ 根目錄下（扁平結構）
-
-    Cline 只讀 ~/.claude/skills/ 的第一層子目錄，
-    所以不能把 14 個 skill 包在 superpowers/ 下面，
-    必須各自獨立為 ~/.claude/skills/<skill-name>/
-    """
-    home = os.path.expanduser("~")
-    skills_dir = os.path.join(home, ".claude", "skills")
+def install_skills_to_dir(source_dir: str, skills_dir: str, label: str) -> list:
+    """把每個 skill 打散放到指定目錄的根目錄下（扁平結構）"""
     skills_src = os.path.join(source_dir, "skills")
 
     if not os.path.isdir(skills_src):
-        print("\n[2/2] 找不到 skills/ 目錄，跳過")
-        return
-
-    print("\n[2/2] 安裝 skills 到 ~/.claude/skills/（扁平結構）...")
+        return []
 
     installed = []
     for skill_name in sorted(os.listdir(skills_src)):
@@ -134,10 +124,11 @@ def install_skills_flat(source_dir: str):
         if os.path.exists(target_path):
             shutil.rmtree(target_path)
 
+        os.makedirs(skills_dir, exist_ok=True)
         shutil.copytree(src_path, target_path)
         installed.append(target_name)
 
-    # 複製使用指南到 ~/.claude/skills/sp-superpowers-guide/
+    # 複製使用指南
     claude_md = os.path.join(source_dir, "CLAUDE.md")
     if os.path.isfile(claude_md):
         guide_dir = os.path.join(skills_dir, "sp-superpowers-guide")
@@ -145,15 +136,42 @@ def install_skills_flat(source_dir: str):
         shutil.copy2(claude_md, os.path.join(guide_dir, "SKILL.md"))
         installed.append("sp-superpowers-guide")
 
-    print(f"  已安裝 {len(installed)} 個 skill：")
-    for name in installed:
-        print(f"    ~/.claude/skills/{name}/")
-
     # 清理舊的巢狀結構（如果存在）
     old_nested = os.path.join(skills_dir, "superpowers")
     if os.path.isdir(old_nested):
         shutil.rmtree(old_nested)
-        print("\n  已清理舊的巢狀結構 (~/.claude/skills/superpowers/)")
+        print(f"  已清理舊的巢狀結構 ({skills_dir}/superpowers/)")
+
+    return installed
+
+
+def install_skills_flat(source_dir: str):
+    """把每個 skill 打散放到 ~/.claude/skills/ 和 ~/.cline/skills/（扁平結構）
+
+    Claude Code 讀 ~/.claude/skills/，Cline 讀 ~/.cline/skills/，
+    所以兩邊都要安裝。不能把 14 個 skill 包在 superpowers/ 下面，
+    必須各自獨立為 sp-<skill-name>/
+    """
+    home = os.path.expanduser("~")
+    skills_src = os.path.join(source_dir, "skills")
+
+    if not os.path.isdir(skills_src):
+        print("\n[2/2] 找不到 skills/ 目錄，跳過")
+        return
+
+    targets = [
+        (os.path.join(home, ".claude", "skills"), "Claude Code"),
+        (os.path.join(home, ".cline", "skills"), "Cline"),
+    ]
+
+    print("\n[2/2] 安裝 skills（扁平結構）...")
+
+    for skills_dir, label in targets:
+        installed = install_skills_to_dir(source_dir, skills_dir, label)
+        print(f"\n  {label} ({skills_dir}):")
+        print(f"  已安裝 {len(installed)} 個 skill：")
+        for name in installed:
+            print(f"    {skills_dir}/{name}/")
 
 
 def main():
@@ -184,8 +202,8 @@ def main():
     print()
     print("=" * 40)
     print(f"Superpowers v{version} 安裝完成！")
-    print("Claude Code: 透過 plugin 機制載入（superpowers: prefix）")
-    print("Cline: 透過 ~/.claude/skills/sp-*/ 載入（扁平結構）")
+    print("Claude Code: 透過 plugin 機制載入 + ~/.claude/skills/sp-*/")
+    print("Cline: 透過 ~/.cline/skills/sp-*/ 載入（扁平結構）")
 
 
 if __name__ == "__main__":

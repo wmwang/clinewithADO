@@ -27,7 +27,8 @@ import os
 # 不需要對外安裝的技能
 EXCLUDE_LIST = {"team-skill-installer", "skill-manual-writer-workspace", "superpowers-plugin"}
 
-DEFAULT_SKILLS_DIR = os.path.join(os.path.expanduser("~"), ".claude", "skills")
+CLAUDE_SKILLS_DIR = os.path.join(os.path.expanduser("~"), ".claude", "skills")
+CLINE_SKILLS_DIR = os.path.join(os.path.expanduser("~"), ".cline", "skills")
 
 
 def dir_hash(directory: str) -> str:
@@ -98,19 +99,29 @@ def get_description(skill_file: str) -> str:
     return ""
 
 
-def check_install_status(skill_name: str, source_dir: str, installed_dir: str) -> str:
-    """檢查技能的安裝狀態"""
-    target = os.path.join(installed_dir, skill_name)
-    if not os.path.isdir(target):
-        return "not_installed"
-
+def check_install_status(skill_name: str, source_dir: str, claude_dir: str, cline_dir: str) -> dict:
+    """檢查技能在兩個目錄的安裝狀態"""
     source_hash = dir_hash(source_dir)
-    installed_hash = dir_hash(target)
+    result = {}
 
-    if source_hash == installed_hash:
-        return "up_to_date"
+    for label, installed_dir in [("claude", claude_dir), ("cline", cline_dir)]:
+        target = os.path.join(installed_dir, skill_name)
+        if not os.path.isdir(target):
+            result[label] = "not_installed"
+        elif source_hash == dir_hash(target):
+            result[label] = "up_to_date"
+        else:
+            result[label] = "needs_update"
+
+    # 整體狀態：任一個未安裝就算未安裝，任一個需更新就算需更新
+    if any(v == "not_installed" for v in result.values()):
+        result["overall"] = "not_installed"
+    elif any(v == "needs_update" for v in result.values()):
+        result["overall"] = "needs_update"
     else:
-        return "needs_update"
+        result["overall"] = "up_to_date"
+
+    return result
 
 
 def count_sub_skills(skill_dir: str) -> int:
@@ -124,7 +135,7 @@ def count_sub_skills(skill_dir: str) -> int:
     return count
 
 
-def scan(skills_dir: str, check_installed: bool, installed_dir: str) -> list:
+def scan(skills_dir: str, check_installed: bool, claude_dir: str, cline_dir: str) -> list:
     """掃描 Skills/ 目錄，回傳技能清單"""
     results = []
 
@@ -156,7 +167,8 @@ def scan(skills_dir: str, check_installed: bool, installed_dir: str) -> list:
         # 安裝狀態
         status = "not_installed"
         if check_installed:
-            status = check_install_status(entry, skill_path, installed_dir)
+            status_detail = check_install_status(entry, skill_path, claude_dir, cline_dir)
+            status = status_detail["overall"]
 
         results.append({
             "name": entry,
@@ -173,11 +185,13 @@ def main():
     parser = argparse.ArgumentParser(description="掃描 Skills/ 目錄，輸出技能清單 JSON")
     parser.add_argument("source_dir", help="Skills 來源目錄路徑（repo 中的 Skills/）")
     parser.add_argument("--check-installed", action="store_true", help="檢查安裝狀態")
-    parser.add_argument("--installed-dir", default=DEFAULT_SKILLS_DIR,
-                        help="已安裝技能目錄 (預設 ~/.claude/skills)")
+    parser.add_argument("--claude-dir", default=CLAUDE_SKILLS_DIR,
+                        help="Claude Code skills 目錄 (預設 ~/.claude/skills)")
+    parser.add_argument("--cline-dir", default=CLINE_SKILLS_DIR,
+                        help="Cline skills 目錄 (預設 ~/.cline/skills)")
     args = parser.parse_args()
 
-    results = scan(args.source_dir, args.check_installed, args.installed_dir)
+    results = scan(args.source_dir, args.check_installed, args.claude_dir, args.cline_dir)
     print(json.dumps(results, indent=2, ensure_ascii=False))
 
 

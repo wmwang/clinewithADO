@@ -1,7 +1,7 @@
 ---
 name: team-skill-installer
 description: |
-  團隊 AI 技能一鍵安裝與管理工具。引導同事安裝、更新、刪除團隊共用的 AI Skills。技能統一安裝到 ~/.claude/skills/，Claude Code 和 Cline 都會自動讀取。
+  團隊 AI 技能一鍵安裝與管理工具。引導同事安裝、更新、刪除團隊共用的 AI Skills。技能同時安裝到 ~/.claude/skills/（Claude Code）和 ~/.cline/skills/（Cline），兩個 AI agent 都能使用。
   觸發情境包含（但不限於）：
   - 「幫我安裝技能」、「安裝 skills」、「setup skills」、「install skills」
   - 「我剛 clone 下來，要怎麼開始」、「怎麼設定 AI 工具」
@@ -109,10 +109,10 @@ claude --version 2>/dev/null
 > **基礎AI Coding開發工具流程套件（建議全裝）：**
 >
 > 1. **Superpowers** — AI 進階工作流程插件，提供 brainstorming、TDD、debugging、計畫撰寫等結構化開發流程。讓 AI 在寫程式前先思考、先規劃，品質大幅提升。
->    - 支援：Claude Code（plugin 方式）、Cline（規則檔方式）
+>    - 支援：Claude Code（plugin + ~/.claude/skills/）、Cline（~/.cline/skills/）
 >
 > 2. **OpenSpec** — 規格驅動開發框架，從提案 → 規格 → 設計 → 任務清單，適合中大型功能開發。讓需求不再模糊，開發有跡可循。
->    - 支援：Claude Code、Cline（透過 skills 目錄安裝）
+>    - 支援：Claude Code（~/.claude/skills/）、Cline（~/.cline/skills/）
 >
 > 輸入 `1`、`2`、或 `all` 選擇要安裝的套件，輸入 `skip` 跳過此步驟。
 
@@ -127,7 +127,7 @@ python3 "$REPO_ROOT/.claude/skills/team-skill-installer/scripts/install_superpow
 
 腳本會做以下事情：
 1. **Claude Code plugin 註冊**：複製到 `~/.claude/plugins/cache/` 並註冊到 `~/.claude/plugins/installed_plugins.json`，效果等同 `claude plugins install`
-2. **Skills 扁平安裝**：把 Superpowers 的 14 個 skill 各自安裝到 `~/.claude/skills/sp-<skill名稱>/`（扁平結構）。因為 Cline 只讀 `~/.claude/skills/` 的第一層子目錄，不能用巢狀結構。加 `sp-` prefix 避免跟其他 skill 撞名。
+2. **Skills 扁平安裝**：把 Superpowers 的 14 個 skill 各自安裝到 `~/.claude/skills/sp-<skill名稱>/` 和 `~/.cline/skills/sp-<skill名稱>/`（扁平結構，雙路徑）。加 `sp-` prefix 避免跟其他 skill 撞名。
 
 如果 `superpowers-plugin/` 目錄不存在，代表 repo 還沒有打包 superpowers。此時可以走線上安裝的備用方案：
 - Claude Code：`claude plugins install superpowers@claude-plugins-official`
@@ -189,12 +189,13 @@ python3 "$REPO_ROOT/.claude/skills/team-skill-installer/scripts/scan_skills.py" 
 
 #### 安裝原理
 
-所有技能統一安裝到：
+所有技能同時安裝到兩個路徑：
 ```
-~/.claude/skills/<技能名稱>/
+~/.claude/skills/<技能名稱>/    ← Claude Code 讀取
+~/.cline/skills/<技能名稱>/     ← Cline 讀取
 ```
 
-Claude Code 和 Cline 都會讀取這個路徑，安裝一次兩邊都能用。
+因為部分 Cline 版本不會讀取 `~/.claude/skills/`，所以需要分開安裝。
 放在家目錄下，不管開哪個專案都有效。
 如果已安裝過同名技能，腳本會先備份再覆蓋。
 
@@ -223,8 +224,9 @@ Windows 使用者的路徑會自動轉換（`~` = `%USERPROFILE%`），不需要
 > | tech-article-writer | 已安裝 | 科技文章撰寫 |
 > | legacy-code-analyzer | 已更新 | 舊系統分析 |
 >
-> 安裝位置：`~/.claude/skills/`
-> Claude Code 和 Cline 都會自動讀取，不需要額外設定。
+> 安裝位置：
+> - Claude Code：`~/.claude/skills/`
+> - Cline：`~/.cline/skills/`
 >
 > **如何使用：**
 > - 直接對話即可，技能會根據你的問題自動觸發
