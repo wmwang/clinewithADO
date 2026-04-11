@@ -4,382 +4,212 @@
 ```text
 +--------------------------------------------------------------------------------------------------+
 | /---/                                                                                      \---/ |
-| \---/                                                                                      /---\ |
 |            .   '               * '                     .             '                           |
 |                                                                                                  |
+|                                A G E N T     S K I L L     H U B               s s               |
 |                                                                                                  |
-|                                 A G E N T     S K I L L     H U B                                |
-|                                                                                                  |
-|                                       Harness.   Skill.   Agent.                                 |
-|                                                                                                  |
-|            '                   * '                     '             '                           |
+|                                One repo. Every AI skill team needs.                              |
 |                                                                                                  |
 |          o           o                                                             o             |
 |      o---o---o---o---o---o                                                     o---o---o         |
-|                                                                                                  |
-|                                   [===>-------------------------<===]                            |
 | /---/                                                                                      \---/ |
-| \---/                                                                                      /---\ |
 +--------------------------------------------------------------------------------------------------+
-# cline-ado
 
-> Open-source AI coding agent. Enterprise ADO workflow. Isolated Docker environment.
+
+> A shared skill repository for **Claude Code** and **Cline** — giving your AI coding agents enterprise-grade capabilities through a single `git clone`.
 
 ---
 
 ## The Problem
 
-Your enterprise bans consumer IM tools. Your CI/CD lives entirely in Azure DevOps. Your developers want AI-assisted coding, but every cloud copilot either leaks proprietary code, requires a browser extension IT won't approve, or ignores your ticket system entirely.
+Your team uses AI coding agents daily. But out of the box, they can't query your Azure DevOps work items, review your PRs, or understand your legacy VB6 codebase. Each developer ends up writing their own prompts, with inconsistent quality and no way to share improvements.
 
-cline-ado solves all three.
-
----
-
-## What It Is
-
-A single Docker image that bundles [Cline](https://github.com/cline/cline) — a production-grade, open-source AI coding agent — with the full Azure DevOps toolchain, then wires them together through a **skills system** that speaks native ADO.
-
-The result: an AI agent that reads your work items, understands your codebase, writes the code, creates the PR, and closes the ticket. Without leaving your corporate perimeter.
+**Agent Skill Hub** solves this by turning team knowledge into installable AI skills — version-controlled, peer-reviewed, and deployable to every developer's machine in minutes.
 
 ---
 
-## Architecture
-https://lh3.googleusercontent.com/gg-dl/AOI_d_92NEhEq4Pvgea5bLsib3aqaJtKpscahsuHcdmNtS2vhfZIHZuheKcOll1TXizRGiCdPV49lKj0piQfx1LfNtJg8Tr4asi4RBjLF_RaDLshYHvD7S3Q0ycCweMvMOudvkYSlWCYqWcSh9yrGNqNkLupTkGLO5wkXKpNS_tAYtE3mb70sw=s1024-rj<img width="1024" height="572" alt="image" src="https://github.com/user-attachments/assets/431f1693-dee5-4cd5-b6b3-b604e1427fa2" />
+## What's Inside
 
 ```
-  Developer
-     │
-     │  create ADO work item [AI]          create ADO work item [ai]
-     │  activity: Requirements              activity: Development
-     ▼                                              ▼
-azure-ai-requirements skill            azure-ai-apply skill
-     │                                              │
-     ├─ find work item via ADO API                  ├─ find work item via ADO API
-     ├─ clone feature branch                        ├─ fetch SDD from ADO Discussion ◄─────┐
-     ├─ read & understand codebase                  ├─ clone feature branch                │
-     │                                              ├─ create auto/<id> branch             │
-     ▼                                              │                                      │
-  Claude Agent                               Claude Agent                                  │
-     │                                              │                                      │
-     ├─ proposal.md  (what & why)                   ├─ implement tasks from tasks.md       │
-     ├─ design.md    (how)           ───────────────┼─ guided by design.md                │
-     └─ tasks.md     (atomic steps)                 ├─ commit + push                       │
-          │                                         ├─ PR: auto/<id> → feature branch      │
-          ▼                                         └─ update work item → Done             │
-   ADO Discussion  ──────────────────────────────────────────────────────────────────────►┘
-   Work Item → Done
-```
-
-```
-Container image
-┌─────────────────────────────────────────────────────────┐
-│  node:22-slim  (non-root, UID 1000)                     │
-│                                                         │
-│  cline@2.5.0          — AI coding agent engine          │
-│  azure-cli            — az devops commands              │
-│  azure-devops (pip)   — Python SDK for ADO REST API     │
-│                                                         │
-│  .claude/skills/                                        │
-│    azure-ai-requirements/   Phase 1: design docs        │
-│    azure-ai-apply/          Phase 2: implementation     │
-└─────────────────────────────────────────────────────────┘
-```
-
----
-
-## SDLC Automation
-
-Two skills cover the full development lifecycle, handing off through **ADO Discussion as the communication medium**.
-
-### Phase 1 — Requirements Analysis (`azure-ai-requirements`)
-
-Trigger: ADO work item with `[AI]` in the title, activity = **Requirements**, linked to a branch.
-
-```
-work item description
-        │
-        ▼
-  clone branch → read entire codebase
-        │
-        ▼
-  Claude generates three documents:
-
-  proposal.md    what & why
-                 ├─ business context
-                 ├─ success criteria
-                 └─ explicit scope boundary (what's NOT included)
-
-  design.md      how
-                 ├─ affected files and modules
-                 ├─ API contracts / data structures
-                 └─ trade-offs and constraints
-
-  tasks.md       atomic steps
-                 ├─ [ ] Task 1: modify src/api.py add /health endpoint
-                 ├─ [ ] Task 2: add unit test in tests/test_api.py
-                 └─ [ ] Task 3: update OpenAPI spec
-        │
-        ▼
-  posted to ADO Discussion (3 separate comments)
-  work item → Done
-```
-
-### Phase 2 — Implementation (`azure-ai-apply`)
-
-Trigger: ADO work item with `[ai]` in the title, activity = **Development**, linked to a branch.
-
-```
-work item
-        │
-        ├─ look up sibling Requirements work item (same parent)
-        ├─ fetch SDD from its Discussion comments
-        │
-        ▼
-  create auto/<work_item_id> branch from feature branch
-        │
-        ▼
-  Claude reads design.md for architecture context
-  Claude executes tasks.md checklist item by item
-        │
-        ▼
-  git commit → push → az repos pr create
-  PR direction: auto/<id>  →  feature branch   (developer reviews before merge)
-        │
-        ▼
-  post execution summary to ADO Discussion
-  work item → Done
-```
-
-Developer receives a PR. Human stays in the loop by design.
-
----
-
-## Skills
-
-A skill is a markdown instruction file (`SKILL.md`) paired with lightweight Python helper scripts. Claude reads the skill on invocation and follows it step by step. No framework. No magic.
-
-| Skill | Invoke | Phase |
-|-------|--------|-------|
-| `azure-ai-requirements` | `"run requirements"` / `"需求分析"` / `"跑 requirements"` | Requirements → SDD in ADO |
-| `azure-ai-apply` | `"run auto"` / `"跑 auto"` / `"ai task"` | Development → code + PR + close ticket |
-
-```
-.claude/skills/
-├── azure-ai-requirements/
-│   ├── SKILL.md                 ← Claude reads this
-│   └── scripts/
-│       ├── find_work_item.py    ← query ADO for matching [AI] items
-│       └── post_artifacts.py    ← post proposal/design/tasks to Discussion
+clinewithADO/
+├── Skills/                         # 13+ installable AI skills
+│   ├── ado-devops/                 # ADO work items, PRs, repos, wiki
+│   ├── ado-pr-review/              # AI code review on ADO PRs
+│   ├── ado-pr-knowledge/           # Extract review rules from PR history
+│   ├── legacy-code-analyzer/       # VB6/C#/VB.NET codebase analysis
+│   ├── superpowers-plugin/         # Superpowers offline package
+│   └── ...
 │
-└── azure-ai-apply/
-    ├── SKILL.md
-    └── scripts/
-        ├── find_work_item.py    ← query ADO for matching [ai] items
-        ├── fetch_sdd.py         ← retrieve SDD from Requirements sibling Discussion
-        └── complete_task.py     ← post PR link, update work item state
+├── .claude/skills/
+│   └── team-skill-installer/       # One-click skill installer
+│       ├── SKILL.md
+│       └── scripts/                # Cross-platform Python scripts
+│
+└── Docker/                         # Cline + ADO MCP Docker image
+    └── cline/
 ```
-
----
-
-## Skills Are the Unit of Extension, Not a Feature List
-
-This is the most important design principle in the system.
-
-Most tools grow by modifying core code, adding configuration options, and accumulating dependencies. cline-ado takes a different approach: **the core image never changes. New capabilities come from new skills.**
-
-A skill requires only two things:
-- A `SKILL.md`: plain-language instructions telling Claude what to do and how
-- A few Python scripts (optional): for API calls that need actual code
-
-This means anyone can add a skill — no Dockerfile changes, no understanding of Cline internals, no core logic to review. **If someone on your team can write markdown and a few lines of Python, they can extend this system.**
-
-The two built-in skills are just the starting point:
-
-```mermaid
-flowchart LR
-    subgraph Core["Core Image (never changes)"]
-        Cline["cline engine"]
-        AzCLI["azure-cli"]
-        PySDK["azure-devops SDK"]
-    end
-
-    subgraph Skills["Skills (add as many as you need)"]
-        direction TB
-        S1["azure-ai-requirements\nrequirements → SDD"]
-        S2["azure-ai-apply\nimplement → PR"]
-        S3["azure-ai-review\nautomatic code review ✦"]
-        S4["azure-ai-release-notes\ngenerate release notes from work items ✦"]
-        S5["azure-ai-bug-triage\nanalyze bugs, auto-assign owners ✦"]
-        S6["... your next skill"]
-    end
-
-    Core --> Skills
-```
-
-> ✦ Not yet implemented — but adding a skill is all it takes
-
-**The bar for writing a new skill is intentionally low:**
-
-```
-.claude/skills/my-new-skill/
-├── SKILL.md      ← describe the trigger, steps, and expected output
-└── scripts/
-    └── helper.py ← only the lines that need to call an API
-```
-
-In `SKILL.md`, describe what phrase triggers the skill, what steps to follow, and what to produce. Claude reads it and executes. No deployment, no restart, no build pipeline.
-
-This model keeps the core lean while letting each team tailor automation to their own workflow — without waiting for an upstream feature request to be accepted.
 
 ---
 
 ## Quick Start
 
-### 1. Get the image
+### 1. Clone
 
 ```bash
-docker pull your-org/cline-ado:latest
+git clone <repo-url>
+cd clinewithADO
 ```
 
-### 2. Get an ADO Personal Access Token
+### 2. Open your AI agent
 
-`https://dev.azure.com/<your-org>/_usersSettings/tokens`
+Launch **Claude Code** or **Cline** with `clinewithADO/` as your working directory.
 
-Required scopes: **Code** (Read, Write) · **Work Items** (Read, Write) · **Pull Requests** (Read, Write)
+### 3. Install skills
 
-### 3. Configure
+Just say:
+
+> "Help me install skills"
+
+The **team-skill-installer** activates automatically and guides you through:
+
+1. Environment check (Python 3 required, Node.js optional)
+2. Base packages installation (Superpowers, OpenSpec)
+3. Skill selection from the full catalog
+4. Dual-path installation to `~/.claude/skills/` + `~/.cline/skills/`
+5. Installation summary
+
+That's it. Skills work across all your projects — they live in your home directory, not in any single repo.
+
+---
+
+## Available Skills
+
+### Azure DevOps Integration
+
+| Skill | Description | Recommended |
+|:------|:------------|:-----------:|
+| **ado-devops** | Query work items, manage PRs, browse repos, search wiki | Required |
+| **ado-pr-review** | AI code review with inline comments on ADO PRs | Yes |
+| **ado-pr-knowledge** | Extract team code review rules from PR history | Yes |
+
+### Development Workflows
+
+| Skill | Description | Recommended |
+|:------|:------------|:-----------:|
+| **superpowers-workflow** | Full dev lifecycle: brainstorming → plan → implement → review | Yes |
+| **kiro-skill** | Interactive requirements → design docs → task lists | Yes |
+| **bmad-method** | Multi-agent framework (PM / Architect / Dev roles) | Advanced |
+| **spec-kit-skill** | Charter-driven development (9 sub-commands) | Advanced |
+
+### Legacy & Domain-Specific
+
+| Skill | Description | Recommended |
+|:------|:------------|:-----------:|
+| **legacy-code-analyzer** | Deep analysis of VB6 / C# / VB.NET legacy systems | Yes |
+| **npe-guardian** | Java NullPointerException detection and fix | Java projects |
+| **prometheus** | Natural language Prometheus metric queries | K8s environments |
+
+### Writing & Tooling
+
+| Skill | Description | Recommended |
+|:------|:------------|:-----------:|
+| **tech-article-writer** | Technical articles in Traditional Chinese | Yes |
+| **skill-creator** | Create and test new AI skills | Advanced |
+| **skill-manual-writer** | Auto-generate skill documentation | Advanced |
+
+### Base Packages
+
+| Package | Description |
+|:--------|:------------|
+| **Superpowers** | Structured AI workflows — brainstorming, TDD, debugging, planning. Offline install included. |
+| **OpenSpec** | Spec-driven development — proposal → spec → design → task list. |
+
+---
+
+## How It Works
+
+```
+┌──────────────────────────────────────────────────┐
+│              Git Repo (source of truth)           │
+│                                                  │
+│  Skills/              ← skill source code        │
+│  .claude/skills/      ← installer (auto-trigger) │
+└──────────────┬───────────────────────────────────┘
+               │  git clone / git pull
+               ▼
+┌──────────────────────────────────────────────────┐
+│            Developer's Machine                    │
+│                                                  │
+│  ~/.claude/skills/    ← Claude Code reads here   │
+│  ~/.cline/skills/     ← Cline reads here         │
+│  ~/.claude/plugins/   ← Superpowers plugin       │
+└──────────────────────────────────────────────────┘
+```
+
+### Design Decisions
+
+| Decision | Reason |
+|:---------|:-------|
+| **Offline installation** | Corporate networks may block external plugin marketplaces |
+| **Python scripts** | Cross-platform (Windows + macOS + Linux), no extra dependencies |
+| **Dual-path install** | Some Cline versions don't read `~/.claude/skills/` |
+| **Flat directory structure** | Cline only reads first-level subdirectories |
+| **Backup before update** | Old version preserved before overwriting |
+| **Git-based distribution** | Version history, `git pull` to sync, PR-based review for new skills |
+
+---
+
+## Updating Skills
 
 ```bash
-cp .env.example .env
-# fill in OPENAI_API_KEY, ADO_ORG, ADO_PAT, ADO_PROJECT
+git pull
 ```
 
-### 4. Run
-
-```bash
-# Interactive session - Cline
-docker compose -f Docker/cline/docker-compose.yml run --rm cline
-
-# Interactive session - OpenCode
-docker compose -f Docker/opencode/docker-compose.yml run --rm opencode
-
-# Phase 1: analyze a requirements work item
-docker compose -f Docker/cline/docker-compose.yml run --rm cline -y "run azure-ai-requirements"
-
-# Phase 2: implement a development work item
-docker compose -f Docker/cline/docker-compose.yml run --rm cline -y "run azure-ai-apply"
-```
+Then tell your AI agent: "Update skills". The installer compares file hashes and only updates skills that have changed.
 
 ---
 
-## Environment Variables
+## Creating a New Skill
 
-### AI Provider
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `OPENAI_API_KEY` | ✅ | API key (OpenAI, Azure OpenAI, or any compatible endpoint) |
-| `OPENAI_BASE_URL` | — | Custom endpoint — Azure OpenAI, Ollama, vLLM, LM Studio |
-| `CLINE_MODEL` | — | Model override (default: `gpt-4o`) |
-
-**Compatible providers:**
-
-```bash
-# Azure OpenAI
-OPENAI_BASE_URL=https://<resource>.openai.azure.com/openai/deployments/<deployment>
-
-# Ollama (local, from container)
-OPENAI_BASE_URL=http://host.docker.internal:11434/v1
-CLINE_MODEL=llama3.2
-
-# vLLM / self-hosted
-OPENAI_BASE_URL=http://your-server:8000/v1
-```
-
-### Azure DevOps
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `ADO_PAT` | ✅ | Personal Access Token |
-| `ADO_ORG` | ✅ | Organization name (the segment after `dev.azure.com/`) |
-| `ADO_PROJECT` | — | Default project name |
-
-### Corporate Proxy
-
-| Variable | Description |
-|----------|-------------|
-| `HTTPS_PROXY` | Proxy URL, e.g. `http://proxy.corp.com:8080` |
-| `NO_PROXY` | Comma-separated bypass list, e.g. `localhost,.corp.internal` |
-
----
-
-## File Structure
+Anyone on the team can contribute a skill:
 
 ```
-clinewithADO/
-├── Dockerfile              # node:22-slim, Azure CLI, Cline, non-root user
-├── entrypoint.sh           # configures AI provider + az devops auth, then exec cline
-├── docker-compose.yml      # mounts ./workspace, persists cline-data volume
-├── .env.example            # all env vars documented
-├── Makefile                # build / push / run / test / shell
-├── .dockerignore
-└── .claude/
-    └── skills/
-        ├── azure-ai-requirements/
-        └── azure-ai-apply/
+Skills/my-new-skill/
+├── SKILL.md          # Instructions for the AI agent
+└── scripts/          # Optional helper scripts
+    └── helper.py
 ```
 
----
+Write a `SKILL.md` with YAML frontmatter (`name`, `description`) and step-by-step instructions. Submit a PR. Once merged, the entire team can install it.
 
-## Security
-
-| Concern | Mitigation |
-|---------|------------|
-| Supply-chain | Pinned to `cline@2.5.0` — v2.3.0 was a compromised release (2026-02-17); ≥ 2.4.0 includes OIDC provenance |
-| Privilege | Runs as `node` user (UID 1000), not root |
-| Secrets | `.env` excluded from image via `.dockerignore` |
-| Network | No telemetry, no cloud sync — traffic goes only to your AI provider and ADO |
-| Code review | Skills create PRs, not direct merges — developer reviews every change |
+Install the **skill-creator** skill for a guided experience.
 
 ---
 
-## Roadmap
 
-**ACP browser integration**
-Extend the agent outward through Agent Communication Protocol, giving Claude access to web research without manual copy-paste.
 
-**Skills as npm packages**
-Package skills independently so they can be versioned, distributed, and consumed like any other dependency — `npm install @your-org/skill-azure-ado`.
+## Requirements
 
-**Skill evals**
-Benchmark each skill against a fixed set of known tasks. Catch regressions before they ship. Measure output quality, not just execution success.
-
----
-
-## Philosophy
-
-Enterprise AI tooling usually fails in one of three ways: it requires cloud accounts IT won't approve, it ignores the project management system teams actually use, or it gives the AI too much autonomy with no review gate.
-
-cline-ado is built on three different bets:
-
-**Open engine.** Cline is open source. You can audit every line of the agent that runs in your environment.
-
-**OS-level isolation.** Docker containers, not permission checklists. The blast radius of any action is bounded by the container.
-
-**ADO as the interface.** Your work items, your branches, your pull requests. The AI operates within the workflow your team already has — not around it.
-
-**Skills as the extension model.** Want a new capability? Don't touch the core — write a skill. It's a markdown file. Anyone can read it, anyone can contribute it, and everyone knows exactly what Claude will do before it runs. The boundary of this system is set by your team, not by this repository's maintainers.
-
-Small enough to understand. Tight enough to trust.
+| Tool | Required | Notes |
+|:-----|:--------:|:------|
+| Git | Yes | To clone and update the repo |
+| Python 3 | Yes | For installation scripts (cross-platform) |
+| Claude Code or Cline | Yes | At least one AI agent |
+| Node.js | Optional | Only for OpenSpec npm install |
 
 ---
 
-| Package | Version |
-|---------|---------|
-| `cline` / `oh-my-opencode` | 2.5.0 / latest |
-| `azure-cli` + `azure-devops` extension | latest stable |
-| `azure-devops` Python SDK | latest stable |
-| Node.js | 22 (slim) |
-| Python + `venv` + `pip` | 3 (Debian) |
-| Java (`default-jdk`) | 17 (Debian) |
-| Maven | latest stable (Debian) |
+## Contributing
+
+1. Create a skill in `Skills/your-skill-name/`
+2. Write a `SKILL.md` with clear instructions
+3. Test it locally
+4. Submit a PR
+
+See the [skill-creator](Skills/skill-creator/) skill for a guided workflow.
+
+---
+
+## License
+
+Internal use. See your organization's policies.

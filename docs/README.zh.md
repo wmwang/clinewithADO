@@ -1,418 +1,211 @@
-# cline-ado
 
-> 開源 AI coding agent，整合企業 ADO 工作流，在隔離的 Docker 環境裡運行。
+# Agent Skill Hub
 
-## 延伸手冊
+```
+  ┌─────────────────────────────────────────────────────────────────┐
+  │                                                                 │
+  │              A G E N T    S K I L L    H U B                    │
+  │                                                                 │
+  │              一個 Repo，團隊所有 AI 技能的家。                      │
+  │                                                                 │
+  └─────────────────────────────────────────────────────────────────┘
+```
 
-- [Legacy Code Analyzer 使用者手冊](./legacy-code-analyzer-user-manual.md)
-- [三套 SDD Skill 比較：BMAD、OpenSpec、Spec-Kit](./sdd-skills-comparison.zh.md)
+> **Claude Code** 和 **Cline** 的共享技能庫 — 讓你的 AI coding agent 擁有企業級能力，只需一次 `git clone`。
+
+[English](../README.md) | **繁體中文**
 
 ---
 
-## 為什麼需要這個？
+## 痛點
 
-公司禁用外部 IM，CI/CD 全部在 Azure DevOps 上，開發者想用 AI 輔助寫程式 — 但市面上的 AI copilot 不是會把公司程式碼傳到雲端，就是需要 IT 不可能放行的瀏覽器擴充套件，或者根本不認識你們的 ticket 系統。
+團隊每天都在用 AI coding agent。但 AI 出廠不會查你的 Azure DevOps 工單、不懂怎麼 review 你的 PR、也無法分析你的 VB6 舊系統。每個人各自寫 prompt，品質參差不齊，好用的技巧也無法分享。
 
-cline-ado 同時解決這三個問題。
-
----
-
-## 這是什麼
-
-一個 Docker image，把 [Cline](https://github.com/cline/cline)（生產級、開源的 AI coding agent）和完整的 Azure DevOps 工具鏈打包在一起，再透過 **skills 系統**把兩者串起來，讓 AI 能直接操作 ADO。
-
-最終效果：AI agent 讀你的 work item、理解你的 codebase、寫程式、開 PR、關掉 ticket。全程不出公司邊界。
+**Agent Skill Hub** 把團隊知識轉化為可安裝的 AI 技能 — 有版控、有 code review、幾分鐘就能部署到每個人的電腦上。
 
 ---
 
-## 架構 Architecture
-
-兩個 skill 覆蓋完整的 SDLC，透過 **ADO Discussion 作為傳遞設計文件的橋樑**。
-
-```mermaid
-flowchart TD
-    Dev["👤 開發者"]
-
-    subgraph P1["Phase 1 — 需求分析"]
-        WI1["[AI] Work Item\nactivity: Requirements"]
-        S1["azure-ai-requirements skill"]
-        C1["Claude Agent"]
-        SDD["📋 proposal.md\n🏗️ design.md\n✅ tasks.md"]
-    end
-
-    subgraph Bridge["Azure DevOps"]
-        DISC[("💬 ADO Discussion\n設計文件在這裡傳遞")]
-    end
-
-    subgraph P2["Phase 2 — 自動實作"]
-        WI2["[ai] Work Item\nactivity: Development"]
-        S2["azure-ai-apply skill"]
-        C2["Claude Agent"]
-        PR["Pull Request\nauto/id → feature branch"]
-    end
-
-    Dev -->|"建立"| WI1
-    Dev -->|"建立"| WI2
-
-    WI1 --> S1
-    S1 -->|"clone branch + 讀懂 codebase"| C1
-    C1 --> SDD
-    SDD -->|"貼到"| DISC
-
-    WI2 --> S2
-    DISC -.->|"取回設計文件 SDD"| S2
-    S2 --> C2
-    C2 --> PR
-
-    PR -->|"等待人工 code review"| Dev
-```
-
-**系統架構概覽：**
-
-```mermaid
-flowchart TD
-    subgraph Repo["Project Repo  (host · git-versioned)"]
-        subgraph Skills[".cline/skills/  ——  task procedures"]
-            direction LR
-            S1["azure-ai-requirements\nSKILL.md · scripts/"]
-            S2["azure-ai-apply\nSKILL.md · scripts/"]
-            S3["‹custom-skill›\nSKILL.md · scripts/"]
-        end
-        subgraph Workflows[".clinerules/  ——  behavioral rules"]
-            direction LR
-            W1["opsx-explore"]
-            W2["opsx-apply"]
-            W3["opsx-propose · archive · …"]
-        end
-    end
-
-    subgraph Docker["Docker Container  (node:22-slim · UID 1000)"]
-        D1["Core Image  (immutable)\nCline v2.5.0  ·  azure-cli  ·  devops SDK\n\nCI/CD  ·  headless  ·  isolated"]
-    end
-
-    subgraph IDELocal["IDE  (local)  ·  VSCode / Cursor"]
-        I1["Cline Plugin\nsame skill system\n\ninteractive  ·  local dev"]
-    end
-
-    Repo -->|"volume mount  (.:/workspace)"| Docker
-    Repo -->|"local read"| IDELocal
-
-    subgraph Ext["External Integrations"]
-        direction LR
-        AI["AI Provider\nOpenAI-compatible\ngpt-4o  ·  AzureOAI  ·  Ollama  ·  vLLM"]
-        ADO["Azure DevOps\nWork Items  ·  SDD  ·  Repos  ·  PR\npre-configured"]
-        MCP["MCP Tools  (optional)\nGitHub  ·  Slack  ·  DB  ·  …\nuser-configurable"]
-    end
-
-    Docker --> AI & ADO & MCP
-    IDELocal --> AI & ADO & MCP
-```
-
----
-
-## SDLC 自動化流程
-
-### Phase 1 — 需求分析（`azure-ai-requirements`）
-
-**觸發條件**：ADO work item 標題含 `[AI]`、activity = **Requirements**、已連結 branch。
-
-```mermaid
-flowchart TD
-    WI["[AI] Work Item\ndescription 描述需求"]
-    WI --> Clone["clone feature branch\n讀懂整個 codebase"]
-    Clone --> C["Claude Agent"]
-
-    C --> P["📋 proposal.md\n做什麼、為什麼\n業務背景、成功標準、範圍界定"]
-    C --> D["🏗️ design.md\n怎麼做\n涉及檔案、API 設計、技術取捨"]
-    C --> T["✅ tasks.md\n具體步驟\n- [ ] Task 1...\n- [ ] Task 2..."]
-
-    P --> DISC[("ADO Discussion\n三則留言分別貼出")]
-    D --> DISC
-    T --> DISC
-
-    DISC --> Done["Work Item → Done"]
-```
-
-### Phase 2 — 自動實作（`azure-ai-apply`）
-
-**觸發條件**：ADO work item 標題含 `[ai]`、activity = **Development**、已連結 branch。
-
-```mermaid
-flowchart TD
-    WI["[ai] Work Item"]
-    WI --> Find["透過 parent link 找同層 Requirements work item\n從它的 Discussion 取回 SDD"]
-    Find --> Branch["從 feature branch 建立 auto/id branch"]
-    Branch --> C["Claude Agent\n讀 design.md 理解架構\n逐項執行 tasks.md checklist"]
-    C --> Commit["git commit + push"]
-    Commit --> PR["az repos pr create\nauto/id → feature branch"]
-    PR --> Post["執行摘要貼到 ADO Discussion\nWork Item → Done"]
-    Post --> Review["👤 開發者 Code Review\n人始終在 review loop 裡"]
-```
-
----
-
-## Skills 系統
-
-Skill 就是一個 `SKILL.md` 指令檔，加上幾支輕量 Python 腳本（處理 ADO API 呼叫）。Claude 在執行 skill 時讀取這個檔案，一步一步照著走。沒有框架魔法，全是可讀的文字。
-
-| Skill | 呼叫方式 | 做什麼 |
-|-------|----------|--------|
-| `azure-ai-requirements` | `"跑 requirements"` / `"需求分析"` / `"run requirements"` | 讀需求 → 產出 SDD → 貼到 ADO |
-| `azure-ai-apply` | `"跑 auto"` / `"ai task"` / `"run auto"` | 讀 SDD → 寫程式 → 開 PR → 關 ticket |
-
-```
-.claude/skills/
-├── azure-ai-requirements/
-│   ├── SKILL.md                 ← Claude 讀這個
-│   └── scripts/
-│       ├── find_work_item.py    ← 查詢符合條件的 [AI] work item
-│       └── post_artifacts.py    ← 把 proposal/design/tasks 貼到 Discussion
-│
-└── azure-ai-apply/
-    ├── SKILL.md
-    └── scripts/
-        ├── find_work_item.py    ← 查詢符合條件的 [ai] work item
-        ├── fetch_sdd.py         ← 從 Requirements 兄弟節點取回 SDD
-        └── complete_task.py     ← 貼 PR 連結、更新 work item 狀態
-```
-
----
-
-## Skills 是擴充的單位，不是功能的列表
-
-這是整個系統最重要的設計原則。
-
-大多數工具在需要新功能時，會修改核心程式碼、加入新的設定選項、增加依賴套件。cline-ado 的做法不同：**核心 image 永遠不變，新能力透過新的 skill 加入。**
-
-一個 skill 只需要：
-- 一個 `SKILL.md`：用自然語言告訴 Claude 做什麼、怎麼做
-- 幾支 Python 腳本（可選）：處理需要程式才能做的 API 呼叫
-
-這意味著任何人都可以新增一個 skill — 不需要改 Dockerfile、不需要了解 Cline 內部運作、不需要 PR review 核心邏輯。**你的團隊成員只要能寫 markdown 和幾行 Python，就能擴充這個系統。**
-
-目前內建的兩個 skill 只是起點：
-
-```mermaid
-flowchart LR
-    subgraph Core["核心 Image（固定不變）"]
-        Cline["cline engine"]
-        AzCLI["azure-cli"]
-        PySDK["azure-devops SDK"]
-    end
-
-    subgraph Skills["Skills（可任意擴充）"]
-        direction TB
-        S1["azure-ai-requirements\n需求分析 → SDD"]
-        S2["azure-ai-apply\n實作 → PR"]
-        S3["azure-ai-review\n自動 code review ✦"]
-        S4["azure-ai-release-notes\n從 work item 生成 release note ✦"]
-        S5["azure-ai-bug-triage\n分析 bug、自動指派負責人 ✦"]
-        S6["... 你的下一個 skill"]
-    end
-
-    Core --> Skills
-```
-
-> ✦ 尚未實作，但加一個 skill 就能做到
-
-**寫一個新 skill 的門檻非常低：**
-
-```
-.claude/skills/my-new-skill/
-├── SKILL.md          ← 用中文寫也完全沒問題
-└── scripts/
-    └── helper.py     ← 只需要處理 API 呼叫的那幾行
-```
-
-`SKILL.md` 裡你只需要描述：當使用者說什麼觸發這個 skill、執行哪些步驟、預期輸出什麼。Claude 會讀懂並照著做。
-
-這個模型讓系統保持精簡，同時讓每個團隊可以根據自己的流程量身打造自動化 — 不是等待上游提供功能，而是自己就能擴充。
-
----
-
-## 快速開始 Quick Start
-
-### 1. 取得 image
-
-```bash
-docker pull your-org/cline-ado:latest
-```
-
-### 2. 建立 ADO Personal Access Token（PAT）
-
-前往 `https://dev.azure.com/<your-org>/_usersSettings/tokens`
-
-需要的 scope：**Code** (Read, Write) · **Work Items** (Read, Write) · **Pull Requests** (Read, Write)
-
-### 3. 設定環境變數
-
-```bash
-cp .env.example .env
-# 填入 OPENAI_API_KEY、ADO_ORG、ADO_PAT、ADO_PROJECT
-```
-
-### 4. 啟動
-
-```bash
-# 互動模式（TUI 介面）
-docker compose run --rm cline
-
-# Headless：執行需求分析 skill
-docker compose run --rm cline -y "run azure-ai-requirements"
-
-# Headless：執行自動實作 skill
-docker compose run --rm cline -y "run azure-ai-apply"
-```
-
----
-
-## 環境變數 Environment Variables
-
-### AI Provider
-
-| 變數 | 必填 | 說明 |
-|------|------|------|
-| `OPENAI_API_KEY` | ✅ | API key，支援 OpenAI、Azure OpenAI，以及任何相容的 endpoint |
-| `OPENAI_BASE_URL` | — | 自訂 endpoint，用於 Azure OpenAI、Ollama、vLLM、LM Studio 等 |
-| `CLINE_MODEL` | — | 覆寫預設模型（預設：`gpt-4o`） |
-
-**常見 provider 設定範例：**
-
-```bash
-# Azure OpenAI
-OPENAI_BASE_URL=https://<resource>.openai.azure.com/openai/deployments/<deployment>
-
-# Ollama（本機，從 container 連 host）
-OPENAI_BASE_URL=http://host.docker.internal:11434/v1
-CLINE_MODEL=llama3.2
-
-# vLLM / 其他 self-hosted
-OPENAI_BASE_URL=http://your-server:8000/v1
-```
-
-### Azure DevOps
-
-| 變數 | 必填 | 說明 |
-|------|------|------|
-| `ADO_PAT` | ✅ | Personal Access Token |
-| `ADO_ORG` | ✅ | 組織名稱（`dev.azure.com/` 後面那段） |
-| `ADO_PROJECT` | — | 預設專案名稱 |
-
-### 企業 Proxy
-
-| 變數 | 說明 |
-|------|------|
-| `HTTPS_PROXY` | Proxy URL，例如 `http://proxy.corp.com:8080` |
-| `NO_PROXY` | 不走 proxy 的 hostname，逗號分隔，例如 `localhost,.corp.internal` |
-
----
-
-## 目錄結構 File Structure
+## 專案內容
 
 ```
 clinewithADO/
-├── Dockerfile              # node:22-slim，裝好 Azure CLI + Cline，非 root 執行
-├── entrypoint.sh           # 設定 AI provider + az devops 認證，然後 exec cline
-├── docker-compose.yml      # 掛載 ./workspace，保留 cline-data volume
-├── .env.example            # 所有環境變數說明
-├── Makefile                # build / push / run / test / shell 快捷指令
-├── .dockerignore
-└── .claude/
-    └── skills/
-        ├── azure-ai-requirements/   # Phase 1 skill
-        └── azure-ai-apply/          # Phase 2 skill
+├── Skills/                         # 13+ 可安裝的 AI 技能
+│   ├── ado-devops/                 # ADO 工單/PR/Repo/Wiki 操作
+│   ├── ado-pr-review/              # AI Code Review（ADO PR）
+│   ├── ado-pr-knowledge/           # 從 PR 歷史提煉 review 規則
+│   ├── legacy-code-analyzer/       # VB6/C#/VB.NET 舊系統分析
+│   ├── superpowers-plugin/         # Superpowers 離線安裝包
+│   └── ...
+│
+├── .claude/skills/
+│   └── team-skill-installer/       # 一鍵安裝引導技能
+│       ├── SKILL.md
+│       └── scripts/                # 跨平台 Python 腳本
+│
+└── Docker/                         # Cline + ADO MCP Docker 方案
+    └── cline/
 ```
 
 ---
 
-## 安全性 Security
+## 快速開始
 
-| 問題 | 對策 |
-|------|------|
-| Supply-chain | 固定使用 `cline@2.5.0` — v2.3.0 是遭入侵的惡意版本（2026-02-17 已下架）；≥ 2.4.0 版本有 OIDC provenance 驗證 |
-| 權限 | 以 `node` 使用者（UID 1000）執行，不是 root |
-| 機密 | `.env` 已透過 `.dockerignore` 排除在 image 外 |
-| 網路 | 無遙測、無雲端同步，流量只到你的 AI provider 和 ADO |
-| Code review | Skills 只開 PR，不直接 merge，開發者完整保留審查權 |
+### 1. Clone 專案
 
----
+```bash
+git clone <repo-url>
+cd clinewithADO
+```
 
-## 未來規劃 Roadmap
+### 2. 開啟 AI Agent
 
-**ACP browser 整合**
-透過 Agent Communication Protocol 讓 agent 能往外連到瀏覽器，做網頁研究、查文件，不需要人工複製貼上。
+打開 **Claude Code** 或 **Cline**，確認工作目錄在 `clinewithADO/`。
 
-**Skills 打包成 npm 套件**
-把 skill 獨立版本化，像裝任何 npm 套件一樣簡單 — `npm install @your-org/skill-azure-ado`，統一管理、統一升版。
+### 3. 安裝技能
 
-**Skill evals（效能評估機制）**
-針對每個 skill 建立固定的測試案例，自動量測輸出品質，讓 skill 的迭代有客觀的回歸基準，而不只是靠感覺。
+對 AI 說：
 
----
+> 「幫我安裝技能」
 
-## 設計理念 Philosophy
+**team-skill-installer** 會自動啟動，引導你完成：
 
-企業 AI 工具通常在三個地方壞掉：它需要 IT 不會批准的雲端帳號、它不認識團隊實際用的專案管理系統，或者它給了 AI 太多不受監督的自主權。
+1. 環境檢查（需要 Python 3，Node.js 可選）
+2. 基礎套件安裝（Superpowers、OpenSpec）
+3. 從完整目錄中選擇要安裝的技能
+4. 雙路徑安裝到 `~/.claude/skills/` + `~/.cline/skills/`
+5. 安裝摘要
 
-cline-ado 建立在三個不同的選擇上：
-
-**開源引擎。** Cline 是開源的。在你環境裡跑的 agent，每一行程式碼都可以被審計。
-
-**OS 層級隔離。** 用 Docker container，不是用權限清單。AI 能造成的最大影響範圍被 container 邊界限死。
-
-**ADO 作為介面。** 你的 work item、你的 branch、你的 PR。AI 在你團隊已有的工作流裡運作，而不是另起一套。
-
-**Skills 作為擴充機制。** 想要新功能？不要改核心，寫一個 skill。它是 markdown 檔，任何人都能讀懂，任何人都能貢獻，在執行前就知道 Claude 會做什麼。系統的邊界由你的團隊決定，不是由這個 repo 的 maintainer 決定。
-
-**小到可以完全理解。緊到可以放心信任。**
+完成。技能安裝在家目錄下，跨專案都有效，不會汙染任何單一 repo。
 
 ---
 
-| Package | 版本 |
-|---------|------|
-| `cline` | 2.5.0 |
-| `azure-cli` + `azure-devops` extension | 最新穩定版 |
-| `azure-devops` Python SDK | 最新穩定版 |
-| Node.js | 22 (slim) |
-  ┌─────────────────────────────────────────────────────────────────────────────┐
-  │  Project Repo  (host · git-versioned)                                       │
-  │                                                                             │
-  │  ┌─── .cline/skills/  ─── task procedures ──────────────────────────────┐  │
-  │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                │  │
-  │  │  │ azure-ai-req │  │ azure-ai-    │  │  <custom>    │                │  │
-  │  │  │ SKILL.md     │  │ apply        │  │  SKILL.md    │   ...          │  │
-  │  │  │ scripts/     │  │ SKILL.md     │  │  scripts/    │                │  │
-  │  │  └──────────────┘  └──────────────┘  └──────────────┘                │  │
-  │  └───────────────────────────────────────────────────────────────────────┘  │
-  │                                                                             │
-  │  ┌─── .clinerules/  ─── behavioral rules ────────────────────────────────┐  │
-  │  │  opsx-explore  ·  opsx-apply  ·  opsx-propose  ·  opsx-archive  ·  … │  │
-  │  └───────────────────────────────────────────────────────────────────────┘  │
-  │                                                                             │
-  │                      all loaded via volume mount (.:/workspace)             │
-  └──────────────────────────────┬──────────────────────┬───────────────────────┘
-                                 │                      │
-                        volume mount              local read
-                                 │                      │
-  ╔══════════════════════════════▼═══╗   ╔══════════════▼══════════════════════╗
-  ║  Docker Container                ║   ║  IDE  (local)                       ║
-  ║  (node:22-slim · UID 1000)       ║   ║  VSCode / Cursor                    ║
-  ║                                  ║   ║                                     ║
-  ║  ┌── Core Image (immutable) ──┐  ║   ║  ┌── Cline Plugin ───────────────┐  ║
-  ║  │ Cline v2.5.0               │  ║   ║  │ same skill system              │  ║
-  ║  │ azure-cli · devops SDK     │  ║   ║  │ developer's own context        │  ║
-  ║  └────────────────────────────┘  ║   ║  └───────────────────────────────┘  ║
-  ║                                  ║   ║                                     ║
-  ║  CI/CD · headless · isolated     ║   ║  interactive · local dev            ║
-  ╚══════════════════╤═══════════════╝   ╚═════════════════════╤═══════════════╝
-                     │                                         │
-                     └─────────────────────┬───────────────────┘
-                                           │
-           ┌───────────────────────────────┼──────────────────────────────────┐
-           │                               │                                  │
-  ┌────────▼────────────┐   ┌──────────────▼──────────┐   ┌───────────────────▼──────────┐
-  │    AI Provider      │   │    Azure DevOps          │   │   MCP Tools   (optional)     │
-  │  OpenAI-compatible  │   │  Work Items · SDD        │   │  any MCP-compliant server    │
-  │  gpt-4o · AzureOAI  │   │  Repos · Pull Request    │   │  GitHub · Slack · DB · …    │
-  │  Ollama · vLLM      │   └──────────────────────────┘   └──────────────────────────────┘
-  └─────────────────────┘       (pre-configured)                  (user-configurable)
+## 可安裝的技能
+
+### Azure DevOps 整合
+
+| 技能 | 說明 | 推薦 |
+|:-----|:-----|:----:|
+| **ado-devops** | 查工單、看 PR、管 Repo、搜 Wiki — ADO 全方位操作 | 必裝 |
+| **ado-pr-review** | AI 自動 Code Review，在 ADO PR 上留 inline 意見 | 推薦 |
+| **ado-pr-knowledge** | 從歷史 PR review 提煉團隊 Code Review 規則 | 推薦 |
+
+### 開發流程
+
+| 技能 | 說明 | 推薦 |
+|:-----|:-----|:----:|
+| **superpowers-workflow** | 完整開發流程：brainstorming → 計畫 → 實作 → review | 推薦 |
+| **kiro-skill** | 互動式需求釐清 → 設計文件 → 任務清單 | 推薦 |
+| **bmad-method** | 多代理人開發框架（PM / Architect / Dev 角色分工） | 進階 |
+| **spec-kit-skill** | 憲章驅動開發（9 個子指令） | 進階 |
+
+### 舊系統與特定領域
+
+| 技能 | 說明 | 推薦 |
+|:-----|:-----|:----:|
+| **legacy-code-analyzer** | VB6 / C# / VB.NET 舊系統深度分析與報告產生器 | 推薦 |
+| **npe-guardian** | Java NullPointerException 偵測與自動修復 | Java 專案 |
+| **prometheus** | 用自然語言查 Prometheus 指標 | K8s 環境 |
+
+### 文件與工具
+
+| 技能 | 說明 | 推薦 |
+|:-----|:-----|:----:|
+| **tech-article-writer** | 繁體中文科技文章 / AI 教學文撰寫 | 推薦 |
+| **skill-creator** | 開發並測試新的 AI 技能 | 進階 |
+| **skill-manual-writer** | 為技能自動產生操作手冊 | 進階 |
+
+### 基礎套件（建議全裝）
+
+| 套件 | 說明 |
+|:-----|:-----|
+| **Superpowers** | AI 結構化工作流程 — brainstorming、TDD、debugging、計畫撰寫。離線安裝包已內建。 |
+| **OpenSpec** | 規格驅動開發 — 提案 → 規格 → 設計 → 任務清單。 |
+
+---
+
+## 運作架構
+
+```
+┌──────────────────────────────────────────────────┐
+│              Git Repo（唯一來源）                   │
+│                                                  │
+│  Skills/              ← 技能原始碼                │
+│  .claude/skills/      ← 安裝器（自動觸發）         │
+└──────────────┬───────────────────────────────────┘
+               │  git clone / git pull
+               ▼
+┌──────────────────────────────────────────────────┐
+│              同事的電腦                            │
+│                                                  │
+│  ~/.claude/skills/    ← Claude Code 讀取          │
+│  ~/.cline/skills/     ← Cline 讀取                │
+│  ~/.claude/plugins/   ← Superpowers plugin        │
+└──────────────────────────────────────────────────┘
+```
+
+### 設計決策
+
+| 決策 | 原因 |
+|:-----|:-----|
+| **離線安裝** | 公司內網可能無法存取外部 plugin marketplace |
+| **Python 腳本** | 跨平台（Windows + macOS + Linux），不需額外安裝 |
+| **雙路徑安裝** | 部分 Cline 版本不讀 `~/.claude/skills/`，需分開放 |
+| **扁平目錄結構** | Cline 只讀第一層子目錄，不支援巢狀 |
+| **更新前備份** | 覆蓋前保留舊版，降低風險 |
+| **Git 版控散布** | 有變更歷史、`git pull` 同步、PR review 把關新技能品質 |
+
+---
+
+## 更新技能
+
+```bash
+git pull
+```
+
+然後跟 AI 說「更新技能」。安裝器會比對檔案 hash，只更新有變動的技能。
+
+---
+
+## 開發新技能
+
+任何團隊成員都能貢獻技能：
+
+```
+Skills/my-new-skill/
+├── SKILL.md          # AI agent 的指令文件
+└── scripts/          # 選配的輔助腳本
+    └── helper.py
+```
+
+寫一份含 YAML frontmatter（`name`、`description`）的 `SKILL.md`，加上逐步指令。發 PR，review 通過後全團隊就能安裝使用。
+
+安裝 **skill-creator** 技能可以獲得引導式開發體驗。
+
+---
+
+
+## 系統需求
+
+| 工具 | 必要 | 備註 |
+|:-----|:----:|:-----|
+| Git | 是 | Clone 及更新 repo |
+| Python 3 | 是 | 安裝腳本使用（跨平台） |
+| Claude Code 或 Cline | 是 | 至少一個 AI agent |
+| Node.js | 選配 | 僅 OpenSpec npm 安裝需要 |
+
+---
+
+## 貢獻方式
+
+1. 在 `Skills/your-skill-name/` 建立技能目錄    
+2. 撰寫 `SKILL.md`，清楚描述觸發條件與執行步驟
+3. 本機測試通過
+4. 發 PR
+
+可使用 [skill-creator](../Skills/skill-creator/) 技能取得引導式開發流程。
+
+---
+
+## 授權
+
+內部使用。請依照貴組織的政策。
