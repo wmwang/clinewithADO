@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="GitAgent-Flow">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="GitAgent：把 AI Agent 當 Git Repo 管理" style="text;html=1;fontSize=18;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="600" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="repo" value="Git Repo = Agent&#xa;(agent.yaml + SOUL.md)" style="swimlane;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="100" width="260" height="460" as="geometry" />
+        </mxCell>
+        <mxCell id="f1" value="agent.yaml&#xa;(manifest/policy)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="repo">
+          <mxGeometry x="30" y="50" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="f2" value="SOUL.md&#xa;(identity / values)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="repo">
+          <mxGeometry x="30" y="110" width="200" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="f3" value="RULES.md / DUTIES.md" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="repo">
+          <mxGeometry x="30" y="170" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="f4" value="skills/ tools/ workflows/" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="repo">
+          <mxGeometry x="30" y="220" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="f5" value="knowledge/ memory/" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="repo">
+          <mxGeometry x="30" y="270" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="f6" value="hooks/ compliance/ agents/" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="repo">
+          <mxGeometry x="30" y="320" width="200" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="git" value="Git：commit / branch / PR&#xa;→ 版本化 + 稽核軌跡" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="repo">
+          <mxGeometry x="20" y="380" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="cli" value="gitagent CLI&#xa;init / validate / run / export / audit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="260" width="240" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="hitl" value="Human-in-the-Loop&#xa;(PR Review / SoD)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="430" y="150" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ci" value="CI/CD&#xa;(validate on push)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="430" y="400" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="adapters" value="Adapters (export)" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;html=1;" vertex="1" parent="1">
+          <mxGeometry x="760" y="100" width="360" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" value="Claude Code (CLAUDE.md)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="adapters">
+          <mxGeometry x="20" y="50" width="320" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" value="OpenAI Agents SDK" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="adapters">
+          <mxGeometry x="20" y="85" width="320" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" value="CrewAI / LangChain YAML" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="adapters">
+          <mxGeometry x="20" y="120" width="320" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="a4" value="Cursor / Gemini CLI Rules" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="adapters">
+          <mxGeometry x="20" y="155" width="320" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="a5" value="GitHub Actions / Raw System Prompt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="adapters">
+          <mxGeometry x="20" y="190" width="320" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="a6" value="gitagent run（直接執行）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="adapters">
+          <mxGeometry x="20" y="230" width="320" height="35" as="geometry" />
+        </mxCell>
+
+        <mxCell id="audit" value="Compliance / Audit&#xa;FINRA · SR 11-7 · SEC" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="430" width="280" height="60" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" value="load / validate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="repo" target="cli">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="memory / learn → PR" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="cli" target="hitl">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="merge → commit" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="hitl" target="repo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="on push" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="repo" target="ci">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="export" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="cli" target="adapters">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="audit report&#xa;(git log / blame)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="cli" target="audit">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
