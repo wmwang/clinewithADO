@@ -1,55 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mxfile host="drawio" version="26.0.0">
   <diagram name="gitagent Overview" id="gitagent-flow">
-    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
+
         <mxCell id="title" value="<b>gitagent</b> — Your Repository Becomes Your Agent" style="text;html=1;align=center;verticalAlign=middle;fontSize=18;fontColor=#1a1a2e;" vertex="1" parent="1">
           <mxGeometry x="350" y="20" width="700" height="40" as="geometry" />
         </mxCell>
+
         <mxCell id="phase1-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f4ff;strokeColor=#4361ee;strokeWidth=2;dashed=1;" vertex="1" parent="1">
           <mxGeometry x="30" y="80" width="320" height="420" as="geometry" />
         </mxCell>
         <mxCell id="phase1-label" value="<b>1. Define Agent</b> (Git Repo)" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#4361ee;" vertex="1" parent="1">
           <mxGeometry x="80" y="90" width="220" height="30" as="geometry" />
         </mxCell>
+
         <mxCell id="agent-yaml" value="<b>agent.yaml</b><br>Manifest: name, version,<br>model, compliance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4361ee;fontColor=#ffffff;strokeColor=none;" vertex="1" parent="1">
           <mxGeometry x="60" y="130" width="140" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="soul-md" value="<b>SOUL.md</b><br>Identity and personality" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4361ee;fontColor=#ffffff;strokeColor=none;" vertex="1" parent="1">
+        <mxCell id="soul-md" value="<b>SOUL.md</b><br>Identity &amp; personality" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4361ee;fontColor=#ffffff;strokeColor=none;" vertex="1" parent="1">
           <mxGeometry x="210" y="130" width="120" height="60" as="geometry" />
         </mxCell>
+
         <mxCell id="rules-md" value="<b>RULES.md</b><br>Hard constraints" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8edff;strokeColor=#4361ee;fontColor=#4361ee;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="60" y="210" width="120" height="45" as="geometry" />
         </mxCell>
         <mxCell id="duties-md" value="<b>DUTIES.md</b><br>Segregation of duties" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8edff;strokeColor=#4361ee;fontColor=#4361ee;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="190" y="210" width="140" height="45" as="geometry" />
         </mxCell>
+
         <mxCell id="skills-folder" value="<b>skills/</b><br>Reusable modules" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8edff;strokeColor=#4361ee;fontColor=#4361ee;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="60" y="270" width="120" height="45" as="geometry" />
         </mxCell>
         <mxCell id="tools-folder" value="<b>tools/</b><br>MCP tool schemas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8edff;strokeColor=#4361ee;fontColor=#4361ee;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="190" y="270" width="120" height="45" as="geometry" />
         </mxCell>
+
         <mxCell id="knowledge-folder" value="<b>knowledge/</b><br>Reference docs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8edff;strokeColor=#4361ee;fontColor=#4361ee;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="60" y="330" width="120" height="45" as="geometry" />
         </mxCell>
         <mxCell id="memory-folder" value="<b>memory/</b><br>Cross-session state" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8edff;strokeColor=#4361ee;fontColor=#4361ee;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="190" y="330" width="120" height="45" as="geometry" />
         </mxCell>
+
         <mxCell id="more-folders" value="hooks/ workflows/ config/&#xa;compliance/ agents/ examples/" style="text;html=1;align=center;verticalAlign=middle;fontColor=#888;" vertex="1" parent="1">
           <mxGeometry x="70" y="390" width="240" height="35" as="geometry" />
         </mxCell>
+
         <mxCell id="git-badge" value="Git Version Control / Branch / Diff / Tag" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3cd;strokeColor=#ffc107;fontSize=11;fontColor=#856404;" vertex="1" parent="1">
           <mxGeometry x="70" y="440" width="240" height="35" as="geometry" />
         </mxCell>
+
         <mxCell id="phase2-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#ff6f00;strokeWidth=2;dashed=1;" vertex="1" parent="1">
           <mxGeometry x="380" y="80" width="260" height="420" as="geometry" />
         </mxCell>
         <mxCell id="phase2-label" value="<b>2. gitagent CLI</b>" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#ff6f00;" vertex="1" parent="1">
           <mxGeometry x="420" y="90" width="180" height="30" as="geometry" />
         </mxCell>
+
         <mxCell id="cmd-init" value="<b>gitagent init</b><br>Scaffold agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ff6f00;fontColor=#ffffff;strokeColor=none;" vertex="1" parent="1">
           <mxGeometry x="410" y="130" width="200" height="40" as="geometry" />
         </mxCell>
@@ -71,48 +81,57 @@
         <mxCell id="cmd-import" value="<b>gitagent import</b><br>Import from other frameworks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ff6f00;fontColor=#ffffff;strokeColor=none;" vertex="1" parent="1">
           <mxGeometry x="410" y="430" width="200" height="40" as="geometry" />
         </mxCell>
+
         <mxCell id="phase3-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;strokeWidth=2;dashed=1;" vertex="1" parent="1">
           <mxGeometry x="670" y="80" width="340" height="420" as="geometry" />
         </mxCell>
         <mxCell id="phase3-label" value="<b>3. Adapters</b> (Export Targets)" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#2e7d32;" vertex="1" parent="1">
           <mxGeometry x="720" y="90" width="240" height="30" as="geometry" />
         </mxCell>
+
         <mxCell id="adapter-system" value="system-prompt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e7d32;fontColor=#ffffff;strokeColor=none;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="690" y="130" width="140" height="35" as="geometry" />
         </mxCell>
         <mxCell id="adapter-claude" value="Claude Code" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2e7d32;fontColor=#ffffff;strokeColor=none;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="840" y="130" width="140" height="35" as="geometry" />
         </mxCell>
+
         <mxCell id="adapter-crewai" value="CrewAI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#66bb6a;fontColor=#ffffff;strokeColor=none;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="690" y="180" width="140" height="35" as="geometry" />
         </mxCell>
         <mxCell id="adapter-gemini" value="Gemini" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#66bb6a;fontColor=#ffffff;strokeColor=none;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="840" y="180" width="140" height="35" as="geometry" />
         </mxCell>
+
         <mxCell id="adapter-cursor" value="Cursor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#81c784;fontColor=#ffffff;strokeColor=none;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="690" y="230" width="140" height="35" as="geometry" />
         </mxCell>
         <mxCell id="adapter-copilot" value="GitHub Copilot" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#81c784;fontColor=#ffffff;strokeColor=none;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="840" y="230" width="140" height="35" as="geometry" />
         </mxCell>
+
         <mxCell id="adapter-codex" value="Codex" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a5d6a7;fontColor=#1b5e20;strokeColor=none;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="690" y="280" width="140" height="35" as="geometry" />
         </mxCell>
         <mxCell id="adapter-opencode" value="OpenCode" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#a5d6a7;fontColor=#1b5e20;strokeColor=none;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="840" y="280" width="140" height="35" as="geometry" />
         </mxCell>
+
         <mxCell id="adapter-more" value="Lyzr / Kiro / GitClaw / OpenClaw / Nanobot ..." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;fontColor=#2e7d32;strokeColor=#a5d6a7;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="690" y="330" width="290" height="35" as="geometry" />
         </mxCell>
+
         <mxCell id="adapter-note" value="One Agent Definition&#xa;Export to ANY AI Framework" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff9c4;strokeColor=#f9a825;fontColor=#f57f17;align=center;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="720" y="390" width="220" height="50" as="geometry" />
         </mxCell>
+
         <mxCell id="phase4-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;strokeWidth=2;dashed=1;" vertex="1" parent="1">
           <mxGeometry x="30" y="520" width="1060" height="150" as="geometry" />
         </mxCell>
         <mxCell id="phase4-label" value="<b>4. Git-Native Patterns</b>" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontColor=#c62828;" vertex="1" parent="1">
           <mxGeometry x="400" y="525" width="240" height="30" as="geometry" />
         </mxCell>
+
         <mxCell id="pat-version" value="<b>Agent Versioning</b><br>Git commit = agent history<br>Rollback any change" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c62828;fontColor=#ffffff;strokeColor=none;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="50" y="565" width="160" height="55" as="geometry" />
         </mxCell>
@@ -131,9 +150,11 @@
         <mxCell id="pat-compose" value="<b>Composition</b><br>extends / dependencies<br>Sub-agents and sharing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c62828;fontColor=#ffffff;strokeColor=none;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="925" y="565" width="140" height="55" as="geometry" />
         </mxCell>
+
         <mxCell id="compliance-badge" value="Compliance: FINRA / SEC / Federal Reserve / SOD / Audit Trail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3cd;strokeColor=#ffc107;fontSize=12;fontColor=#856404;align=center;" vertex="1" parent="1">
           <mxGeometry x="300" y="635" width="500" height="30" as="geometry" />
         </mxCell>
+
         <mxCell id="arrow-1-2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#333333;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="git-badge" target="cmd-validate">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -142,6 +163,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
+
         <mxCell id="arrow-2-3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#333333;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="cmd-export" target="adapter-system">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -150,12 +172,14 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
+
         <mxCell id="summary-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#7b1fa2;strokeWidth=2;" vertex="1" parent="1">
           <mxGeometry x="30" y="690" width="1060" height="60" as="geometry" />
         </mxCell>
         <mxCell id="summary-text" value="<b>Core Idea:</b> Define AI Agent as a Git Repo (standardized file structure)  |  Validate/Export/Run via <b>gitagent CLI</b>  |  Run on ANY framework via <b>Adapters</b> (Claude Code, OpenAI, Gemini, Cursor ...)" style="text;html=1;align=center;verticalAlign=middle;fontSize=13;fontColor=#4a148c;" vertex="1" parent="1">
           <mxGeometry x="50" y="695" width="1020" height="50" as="geometry" />
         </mxCell>
+
       </root>
     </mxGraphModel>
   </diagram>

@@ -6,7 +6,12 @@
       "Bash(python -c ':*)",
       "Bash(python \"Skills/team-skill-installer/scripts/install_superpowers.py\" --help)",
       "Bash(python \"Skills/team-skill-installer/scripts/install_superpowers.py\")",
-      "Bash(python \".claude/skills/team-skill-installer/scripts/install_superpowers.py\")"
+      "Bash(python \".claude/skills/team-skill-installer/scripts/install_superpowers.py\")",
+      "Bash(draw.io --version)",
+      "Bash(/Applications/draw.io.app/Contents/MacOS/draw.io --version)",
+      "Bash(draw.io -x -f png -e -s 2 -b 10 -o ado-workflow-new-architecture.drawio.png ado-workflow-new-architecture.drawio)",
+      "Bash(/Applications/draw.io.app/Contents/MacOS/draw.io -x -f png -e -s 2 -b 10 -o ado-workflow-new-architecture.drawio.png ado-workflow-new-architecture.drawio)",
+      "Bash(/Applications/draw.io.app/Contents/MacOS/draw.io -x -f png -e -s 2 -b 10 -o ado-skill-stack.drawio.png ado-skill-stack.drawio)"
     ]
   }
 }
